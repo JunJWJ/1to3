@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一鍋三饗 默契大考驗</title>
+    <style>
+        :root {
+            --primary-color: #ff6b81;
+            --primary-hover: #ff4757;
+            --bg-color: #fff5f5;
+            --card-bg: #ffffff;
+            --text-color: #2f3542;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            height: 90vh;
+            min-height: 600px;
+            max-height: 800px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(255, 107, 129, 0.15);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 30px 24px;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* 標題樣式 */
+        h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #a4b0be;
+            margin-bottom: 40px;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            background: #ffffff;
+            color: var(--text-color);
+            border: 2px solid #f1f2f6;
+            padding: 16px 20px;
+            margin: 10px 0;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 107, 129, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        /* 首頁選單 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 10px 5px;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            align-self: flex-start;
+            background: none;
+            border: none;
+            color: #a4b0be;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* 畫布頁面專屬樣式 */
+        .question-header {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: #f8f9fa;
+            border: 2px dashed #dfe4ea;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* 防止手機拖動時頁面滾動 */
+        }
+
+        .canvas-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+        }
+
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-dot.active {
+            transform: scale(1.2);
+            border-color: #2f3542;
+        }
+
+        /* 頁面裝飾 */
+        .heart-deco {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- 第一頁：主畫面 -->
+        <div id="screen-home" class="screen active">
+            <div class="heart-deco">❤️</div>
+            <h1>一鍋三饗</h1>
+            <div class="subtitle">✨ 默契大考驗 ✨</div>
+            <div class="menu-grid">
+                <button class="btn btn-primary" onclick="goCategory('家庭')">🏠 家庭</button>
+                <button class="btn btn-primary" onclick="goCategory('喜好')">🎨 喜好</button>
+                <button class="btn btn-primary" onclick="goCategory('通常')">👩‍❤️‍👨 通常</button>
+                <button class="btn btn-primary" onclick="goCategory('以後')">🔮 以後</button>
+                <button class="btn btn-primary" onclick="goCategory('動作')">🎬 動作</button>
+            </div>
+        </div>
+
+        <!-- 第二頁：分類問題選單 -->
+        <div id="screen-category" class="screen">
+            <button class="back-btn" onclick="goHome()">◀ 返回主選單</button>
+            <h1 id="category-title">分類名稱</h1>
+            <div class="subtitle">請選擇一個考驗題目</div>
+            <div id="questions-list" class="menu-grid">
+                <!-- 動態插入問題按鈕 -->
+            </div>
+        </div>
+
+        <!-- 第三頁：手繪畫布頁面 -->
+        <div id="screen-canvas" class="screen">
+            <button class="back-btn" onclick="backToCategory()">◀ 返回題目</button>
+            <div id="canvas-question" class="question-header">題目名稱</div>
+            
+            <div class="canvas-container" id="canvas-wrapper">
+                <canvas id="paintCanvas"></canvas>
+            </div>
+
+            <div class="canvas-controls">
+                <div class="color-picker">
+                    <div class="color-dot active" style="background-color: #2f3542;" onclick="changeColor('#2f3542', this)"></div>
+                    <div class="color-dot" style="background-color: #ff4757;" onclick="changeColor('#ff4757', this)"></div>
+                    <div class="color-dot" style="background-color: #1e90ff;" onclick="changeColor('#1e90ff', this)"></div>
+                </div>
+                <button class="btn" style="margin:0; padding: 10px 20px;" onclick="clearCanvas()">清除畫布</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 題目數據資料庫
+        const gameData = {
+            "家庭": [
+                "看起來很有用但買回來只用過一次的物品？",
+                "通常是誰比較像「網購狂魔」？"
+            ],
+            "喜好": [
+                "鹹酥雞配料加九層塔還是加蒜頭？",
+                "吃火鍋第一口通常會先吃什麼？"
+            ],
+            "通常": [
+                "通常意見不合是誰先開口的？",
+                "通常對方都去便利商店都買什麼？"
+            ],
+            "以後": [
+                "有機會養寵物會想要養什麼寵物？",
+                "有機會一起出國，想去哪裡？"
+            ],
+            "動作": [
+                "轉身用雙手比愛心"
+            ]
+        };
+
+        let currentCategory = "";
+        let currentQuestion = "";
+
+        // 畫布相關變數
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentColor = '#2f3542';
+
+        // 畫面切換控制
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goHome() {
+            showScreen('screen-home');
+        }
+
+        function goCategory(category) {
+            currentCategory = category;
+            document.getElementById('category-title').innerText = category;
+            
+            const listContainer = document.getElementById('questions-list');
+            listContainer.innerHTML = ''; // 清空舊的
+
+            // 動態產生該分類的問題按鈕
+            gameData[category].forEach(question => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = question;
+                btn.onclick = () => goCanvas(question);
+                listContainer.appendChild(btn);
+            });
+
+            showScreen('screen-category');
+        }
+
+        function backToCategory() {
+            showScreen('screen-category');
+        }
+
+        function goCanvas(question) {
+            currentQuestion = question;
+            document.getElementById('canvas-question').innerText = question;
+            showScreen('screen-canvas');
+            
+            // 延遲一下初始化畫布，確保容器大小已渲染
+            setTimeout(initCanvas, 100);
+        }
+
+        // --- 畫布手繪功能實作 ---
+        function initCanvas() {
+            const container = document.getElementById('canvas-wrapper');
+            // 設定畫布實際解析度與顯示大小一致
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            // 畫布基礎設定
+            ctx.strokeStyle = currentColor;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 4;
+
+            // 滑鼠事件
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // 觸控事件 (手機/平板)
+            canvas.addEventListener('touchstart', startDrawingTouch);
+            canvas.addEventListener('touchmove', drawTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        // 取得滑鼠/觸控在畫布中的相對座標
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function startDrawingTouch(e) {
+            e.preventDefault(); // 防止手機滾動
+            startDrawing(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPos(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function drawTouch(e) {
+            e.preventDefault(); // 防止手機滾動
+            draw(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function changeColor(color, element) {
+            currentColor = color;
+            ctx.strokeStyle = color;
+            
+            // 切換顏色按鈕選取狀態
+            document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // 監聽視窗縮放，重新調整畫布 (選做，簡單處理)
+        window.addEventListener('resize', () => {
+            if (document.getElementById('screen-canvas').classList.contains('active')) {
+                // 備份畫布內容以防縮放時被清空 (可選)
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(canvas, 0, 0);
+
+                const container = document.getElementById('canvas-wrapper');
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                
+                ctx.strokeStyle = currentColor;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.lineWidth = 4;
+                ctx.drawImage(tempCanvas, 0, 0);
+            }
+        });
+    </script>
+</body>
+</html>
