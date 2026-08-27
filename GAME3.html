@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>命運的抉擇</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #2b1055, #0f051d);
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .container {
+      position: relative;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* 選項外層包裝器（用來偵測滑鼠移出） */
+    .shatter-wrapper {
+      position: relative;
+      width: 100%;
+      height: 58px;
+    }
+
+    /* 選項按鈕基本樣式 */
+    .btn-option {
+      width: 100%;
+      height: 100%;
+      padding: 0 1.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    /* 第四個可選項目 */
+    .btn-valid {
+      transition: background 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+    }
+
+    .btn-valid:hover {
+      background: rgba(255, 107, 129, 0.25);
+      border-color: #ff6b81;
+      box-shadow: 0 0 20px rgba(255, 107, 129, 0.6);
+      transform: scale(1.03);
+    }
+
+    .btn-valid:active {
+      transform: scale(0.97);
+    }
+
+    /* 碎片造型 */
+    .shard {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      transition: transform 0.65s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.65s ease-out;
+    }
+
+    /* 跳轉結果頁面 */
+    #result-view {
+      display: none;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid #ff4757;
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      box-shadow: 0 0 35px rgba(255, 71, 87, 0.35);
+      backdrop-filter: blur(12px);
+    }
+
+    #result-view.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .contract-title {
+      font-size: 1.6rem;
+      color: #ff6b81;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .contract-body {
+      font-size: 1.3rem;
+      color: #ced6e0;
+      line-height: 1.8;
+      letter-spacing: 1px;
+    }
+
+    .seal {
+      margin-top: 2rem;
+      display: inline-block;
+      border: 3px double #ff4757;
+      color: #ff4757;
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      transform: rotate(-6deg);
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="choice-view">
+      <h1>請慎重做出您的選擇</h1>
+      <div class="options-list">
+        
+        <div class="shatter-wrapper">
+          <button class="btn-option shatter-btn">竣竣賺錢養琇琇</button>
+        </div>
+        <div class="shatter-wrapper">
+          <button class="btn-option shatter-btn">竣竣賺錢養琇琇</button>
+        </div>
+        <div class="shatter-wrapper">
+          <button class="btn-option shatter-btn">竣竣賺錢養琇琇</button>
+        </div>
+
+        <div class="shatter-wrapper">
+          <button class="btn-option btn-valid" id="valid-btn">琇琇賺錢養竣竣</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="result-view">
+      <h2 class="contract-title">📜 契約成立通知</h2>
+      <p class="contract-body">
+        妳已選擇該選項，表契約已成立。<br>
+        <strong>請好好履行契約。</strong>
+      </p>
+      <div class="seal">已簽署核准</div>
+    </div>
+  </div>
+
+  <script>
+    const wrappers = document.querySelectorAll('.shatter-wrapper');
+
+    wrappers.forEach((wrapper) => {
+      const btn = wrapper.querySelector('.shatter-btn');
+      if (!btn) return;
+
+      // 1. 滑鼠移入：碎裂炸開、隱藏本體、不可點擊
+      wrapper.addEventListener('mouseenter', () => {
+        if (btn.style.opacity === '0') return;
+
+        const rect = btn.getBoundingClientRect();
+        
+        // 瞬間隱藏本體並關閉點擊判定
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+
+        // 產生碎片
+        createShards(rect);
+      });
+
+      // 2. 滑鼠移出：重新凝聚復原按鈕
+      wrapper.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        }, 150);
+      });
+    });
+
+    // 碎片物理動畫
+    function createShards(rect) {
+      const rows = 4;
+      const cols = 8;
+      const pieceWidth = rect.width / cols;
+      const pieceHeight = rect.height / rows;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const shard = document.createElement('div');
+          shard.classList.add('shard');
+
+          shard.style.left = `${rect.left + c * pieceWidth}px`;
+          shard.style.top = `${rect.top + r * pieceHeight}px`;
+          shard.style.width = `${pieceWidth}px`;
+          shard.style.height = `${pieceHeight}px`;
+
+          // 隨機幾何多邊形切角
+          const p1 = Math.random() * 40;
+          const p2 = 60 + Math.random() * 40;
+          const p3 = 60 + Math.random() * 40;
+          const p4 = Math.random() * 40;
+          shard.style.clipPath = `polygon(${p1}% 0%, 100% ${p1}%, ${p2}% 100%, 0% ${p4}%)`;
+
+          document.body.appendChild(shard);
+
+          // 爆炸方向與擴散軌跡
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 70 + Math.random() * 140;
+          const destX = Math.cos(angle) * distance;
+          const destY = Math.sin(angle) * distance + 40; // 重力微下墜
+          const rotate = (Math.random() - 0.5) * 400;
+
+          requestAnimationFrame(() => {
+            shard.style.transform = `translate(${destX}px, ${destY}px) rotate(${rotate}deg) scale(0)`;
+            shard.style.opacity = '0';
+          });
+
+          // 清除 DOM 碎片
+          setTimeout(() => {
+            shard.remove();
+          }, 650);
+        }
+      }
+    }
+
+    // 點擊唯一選項跳轉頁面
+    const validBtn = document.getElementById('valid-btn');
+    const choiceView = document.getElementById('choice-view');
+    const resultView = document.getElementById('result-view');
+
+    validBtn.addEventListener('click', () => {
+      choiceView.style.display = 'none';
+      resultView.classList.add('active');
+    });
+  </script>
+</body>
+</html>
