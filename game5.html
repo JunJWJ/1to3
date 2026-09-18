@@ -158,20 +158,40 @@
     .rule-card h3 {
       font-size: 0.95rem;
       color: var(--gold);
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
-    .rule-prize {
-      font-size: 1.1rem;
-      font-weight: 700;
+    .rule-prize-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .prize-option {
+      font-size: 0.9rem;
       color: #ffffff;
-      line-height: 1.6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .prize-option .order-type {
+      color: var(--text-sub);
+      font-size: 0.8rem;
+    }
+
+    .prize-option .ticket-name {
+      color: var(--gold-light);
+      font-weight: 700;
     }
 
     .rule-desc {
       font-size: 0.8rem;
       color: var(--text-sub);
-      margin-top: 8px;
     }
 
     /* 結果結算彈窗 (Modal) */
@@ -229,11 +249,11 @@
     }
 
     .modal-reward {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: #fff;
       margin-bottom: 24px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .modal-btn {
@@ -279,10 +299,17 @@
   <!-- 挑戰規則面板 -->
   <div class="rule-card">
     <h3>🎯 挑戰目標：精準 8.00 秒</h3>
-    <div class="rule-prize">
-      套餐抵用券<br>＋ 研究材料兌換券 1 張
+    <div class="rule-prize-list">
+      <div class="prize-option">
+        <span class="order-type">點一般套餐：</span>
+        <span class="ticket-name">送「套餐抵用券」一張</span>
+      </div>
+      <div class="prize-option">
+        <span class="order-type">點蔘雞研究所：</span>
+        <span class="ticket-name">送「研究材料券」一張</span>
+      </div>
     </div>
-    <div class="rule-desc">僅限精確停在 8.00 秒方可獲得獎項</div>
+    <div class="rule-desc">僅限精確停在 8.00 秒方可兌換對應獎項</div>
   </div>
 
   <!-- 結果結算彈窗 -->
@@ -355,7 +382,14 @@
       let rewardContent = "";
 
       if (roundedDiff === 0.00) {
-        rewardContent = "🎉【神手命中 8.00 秒！】<br><span style='color: var(--gold-light);'>套餐抵用券</span><br>＋<br><span style='color: var(--gold-light);'>研究材料兌換券一張</span>";
+        rewardContent = `
+          🎉【神手命中 8.00 秒！】<br>
+          <div style="font-size: 0.95rem; margin-top: 8px; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
+            • 點一般套餐：送 <span style="color: var(--gold-light); font-weight: bold;">套餐抵用券</span><br>
+            • 點蔘雞研究所：送 <span style="color: var(--gold-light); font-weight: bold;">研究材料券</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-sub); margin-top: 6px;">（請出示此畫面由工作人員核對）</p>
+        `;
       } else {
         rewardContent = "<span style='color: #a0a0a8; font-size: 1.05rem;'>很可惜！挑戰失敗</span><br><span style='font-size: 0.9rem; color: #777;'>再接再厲，下次一定中！</span>";
       }
