@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>一鍋三饗・極致火候大廚</title>
+  <style>
+    :root {
+      --bg-dark: #121013;
+      --panel-bg: rgba(30, 26, 32, 0.94);
+      --accent-gold: #ffb834;
+      --accent-red: #ff4747;
+      --accent-green: #2ecc71;
+      --accent-blue: #3498db;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      background-color: var(--bg-dark);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 440px;
+      height: 100dvh;
+      background: radial-gradient(circle at 50% 30%, #291e1b, #120e10 85%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 35px rgba(0,0,0,0.8);
+    }
+
+    /* 頂部資訊列 */
+    .header-bar {
+      padding: calc(var(--safe-top) + 6px) 12px 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(18, 14, 16, 0.85);
+      border-bottom: 1px solid rgba(255, 184, 52, 0.25);
+      z-index: 30;
+    }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .stat-pill span { color: var(--accent-gold); font-size: 15px; }
+    .audio-btns { display: flex; gap: 6px; }
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* 顧客等候區 */
+    .customers-section {
+      height: 115px;
+      padding: 6px 10px;
+      display: flex;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 25;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .customers-section::-webkit-scrollbar { display: none; }
+    .customer-card {
+      flex: 0 0 162px;
+      background: rgba(38, 32, 40, 0.95);
+      border: 1.5px solid rgba(255, 184, 52, 0.4);
+      border-radius: 12px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .cust-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+    .cust-avatar { font-size: 18px; }
+    .cust-combo-name {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cust-patience-bar {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .patience-fill {
+      height: 100%;
+      background: var(--accent-green);
+      will-change: width;
+    }
+    .cust-order {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .order-tag {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      position: relative;
+    }
+    .order-tag-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #eee;
+    }
+    .order-tag.done {
+      border-color: var(--accent-green);
+      background: rgba(46, 204, 113, 0.25);
+    }
+    .order-tag.done .order-tag-name {
+      color: #85e8a7;
+      text-decoration: line-through;
+    }
+
+    /* 一鍋三饗 主爐體區域 */
+    .pot-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    /* 蒸籠區塊 */
+    .steamer-block {
+      background: linear-gradient(180deg, #443425 0%, #2c2116 100%);
+      border: 2px solid #94714d;
+      border-radius: 18px;
+      padding: 8px 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .steamer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .steamer-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #dfba88;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .lid-btn {
+      background: #27ae60;
+      border: 1px solid #70e6a2;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lid-btn.opened {
+      background: #d35400;
+      border-color: #ff9f43;
+    }
+
+    .steamer-body {
+      position: relative;
+      background: #1d1610;
+      border-radius: 14px;
+      padding: 8px;
+      min-height: 84px;
+      display: flex;
+      gap: 10px;
+      justify-content: space-around;
+      border: 1px solid #57412e;
+      overflow: hidden;
+    }
+
+    /* 蒸籠透視蓋 */
+    .steamer-lid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 230, 190, 0.24) 0%, rgba(68, 48, 30, 0.72) 80%);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+      border: 3px solid rgba(186, 140, 89, 0.85);
+      border-radius: 14px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+      transition: transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.15), opacity 0.25s;
+      cursor: pointer;
+    }
+    .steamer-lid-overlay.open {
+      transform: translateY(-115%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .steamer-lid-overlay.has-ready {
+      border-color: #2ecc71;
+      box-shadow: 0 0 14px #2ecc71, inset 0 0 15px rgba(46, 204, 113, 0.4);
+      animation: pulsePerfect 0.8s infinite alternate;
+    }
+
+    .lid-ribs-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(30, 20, 12, 0.75);
+      padding: 2px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 216, 168, 0.3);
+    }
+    .lid-ribs {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd8a8;
+      letter-spacing: 0.5px;
+    }
+    .steam-vent {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffecb3;
+      border-radius: 50%;
+      filter: blur(1px);
+      animation: ventPuff 1s infinite linear;
+    }
+
+    /* 雙下爐：火鍋 & 鐵板 */
+    .bottom-pots {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .pot-card {
+      border-radius: 18px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    }
+    /* 火鍋 */
+    .shabu-block {
+      background: radial-gradient(circle at 50% 50%, #751b1b, #3d0e0e);
+      border: 2px solid #ff7b7b;
+    }
+    .shabu-block::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(255,140,50,0.3) 0%, transparent 70%);
+      animation: boilingWave 2s infinite ease-in-out;
+      pointer-events: none;
+    }
+    /* 鐵板 */
+    .grill-block {
+      background: repeating-linear-gradient(0deg, #2a2828, #2a2828 10px, #181717 10px, #181717 16px);
+      border: 2px solid #999;
+    }
+    .block-tag {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      z-index: 2;
+    }
+    .slots-grid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    /* 食物槽位 */
+    .food-slot {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1.5px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .food-slot.empty::after {
+      content: '點選食材烹調';
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 600;
+    }
+    .cooking-item {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      position: relative;
+      border-radius: 10px;
+    }
+    .food-visual {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .food-visual svg { width: 38px; height: 38px; }
+    .food-emoji { font-size: 26px; }
+    .food-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .food-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .state-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+    }
+    .state-raw { background: #555; color: #eee; }
+    .state-cooking { background: #3498db; color: #fff; }
+    .state-stop {
+      background: #e67e22;
+      color: #fff;
+      animation: pulseAttention 0.8s infinite alternate;
+    }
+    .state-flip {
+      background: #f39c12;
+      color: #000;
+      animation: pulseAttention 0.6s infinite alternate;
+      box-shadow: 0 0 8px #f39c12;
+    }
+    .state-perfect {
+      background: #2ecc71;
+      color: #000;
+      animation: pulsePerfect 0.6s infinite alternate;
+      box-shadow: 0 0 12px #2ecc71;
+      font-weight: 900;
+    }
+    .state-burnt { background: #c0392b; color: #fff; }
+
+    /* 進度微光條 */
+    .cook-progress {
+      width: 55px;
+      height: 4px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .cook-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-gold);
+    }
+
+    /* 底部食材選擇面板 */
+    .ingredient-deck {
+      padding: 6px 10px calc(var(--safe-bottom) + 6px) 10px;
+      background: rgba(18, 14, 16, 0.96);
+      border-top: 1px solid rgba(255, 184, 52, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 20;
+    }
+    .deck-title {
+      font-size: 11px;
+      color: #bbb;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+    .deck-cards {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .ingred-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 5px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+    .ingred-card:active {
+      transform: scale(0.92);
+      background: rgba(255, 184, 52, 0.25);
+    }
+    .ingred-card .thumb {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ingred-card .name {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fff;
+      transform: scale(0.95);
+    }
+    .ingred-card .tag-type {
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .type-steam { background: #8e6234; }
+    .type-shabu { background: #c0392b; }
+    .type-grill { background: #7f8c8d; }
+
+    /* FEVER 狂熱模式 */
+    .fever-glow {
+      animation: feverBorder 0.8s infinite alternate !important;
+    }
+    @keyframes feverBorder {
+      0% { box-shadow: inset 0 0 20px #ff9f1a, 0 0 20px #ff9f1a; }
+      100% { box-shadow: inset 0 0 35px #ff3838, 0 0 35px #ff3838; }
+    }
+
+    /* 動畫 Keyframes */
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes boilingWave {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+    @keyframes pulseAttention {
+      0% { transform: scale(0.96); }
+      100% { transform: scale(1.05); }
+    }
+    @keyframes pulsePerfect {
+      0% { transform: scale(1); filter: drop-shadow(0 0 2px #2ecc71); }
+      100% { transform: scale(1.08); filter: drop-shadow(0 0 8px #2ecc71); }
+    }
+    @keyframes ventPuff {
+      0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+      100% { transform: translateY(-16px) scale(2.2); opacity: 0; }
+    }
+
+    /* 彈跳圖示動畫 (首頁入口) */
+    @keyframes floatBounce {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      50% { transform: translateY(-10px) rotate(4deg) scale(1.08); }
+    }
+    .bounce-icon-1 { animation: floatBounce 1.8s ease-in-out infinite; }
+    .bounce-icon-2 { animation: floatBounce 2.1s ease-in-out infinite 0.2s; }
+    .bounce-icon-3 { animation: floatBounce 1.9s ease-in-out infinite 0.4s; }
+
+    /* 浮動提示/得分飄字 */
+    .score-float {
+      position: absolute;
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--accent-gold);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      pointer-events: none;
+      animation: floatUpFade 0.8s forwards;
+      z-index: 100;
+    }
+    .score-warning {
+      color: var(--accent-red) !important;
+      font-size: 16px !important;
+    }
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-36px); }
+    }
+
+    /* 蒸氣噴射特效 */
+    .steam-particle {
+      position: absolute;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      animation: steamRise 1s forwards ease-out;
+      z-index: 25;
+    }
+    @keyframes steamRise {
+      0% { transform: translate(0, 0) scale(0.6); opacity: 0.8; }
+      100% { transform: translate(var(--dx), -70px) scale(2.5); opacity: 0; }
+    }
+
+    /* 彈窗遮罩 */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 8, 10, 0.94);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    .modal-card {
+      background: #251e22;
+      border: 2px solid var(--accent-gold);
+      border-radius: 20px;
+      padding: 20px 16px;
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+    .modal-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent-gold);
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    .tri-icons-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin: 2px 0 4px 0;
+    }
+    .tri-icon-bubble {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 184, 52, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .tri-icon-bubble span.icon { font-size: 24px; }
+    .tri-icon-bubble span.label { font-size: 10px; font-weight: 800; color: #ffd8a8; }
+
+    /* 入口特色說明容器 */
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 184, 52, 0.2);
+    }
+    .feature-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #eee;
+    }
+    .feature-item strong {
+      color: var(--accent-gold);
+      font-size: 12.5px;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #ff9f1a, #ff4747);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 28px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 71, 71, 0.4);
+      transition: transform 0.15s;
+      width: 100%;
+    }
+    .btn-start:active { transform: scale(0.96); }
+
+    .fever-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(90deg, #ff4747, #ff9f1a);
+      padding: 6px 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #ff9f1a;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+
+  <!-- 頂部資訊列 -->
+  <div class="header-bar">
+    <div class="stat-pill">⏱️ <span id="timer-txt">60</span>s</div>
+    <div class="stat-pill">💰 $<span id="score-txt">0</span></div>
+    <div class="stat-pill">🔥 <span id="combo-txt">0</span> Combo</div>
+    <div class="audio-btns">
+      <button class="icon-btn" id="btn-bgm" title="音樂">🎵</button>
+      <button class="icon-btn" id="btn-sfx" title="音效">🔊</button>
+    </div>
+  </div>
+
+  <!-- 顧客等候出餐列 -->
+  <div class="customers-section" id="customers-list"></div>
+
+  <!-- 一鍋三饗主烹飪舞台 -->
+  <div class="pot-stage" id="pot-stage">
+    <div id="fever-tag" class="fever-banner">🔥 FEVER TIME! 雙倍得分</div>
+
+    <!-- 1. 蒸籠區域 -->
+    <div class="steamer-block">
+      <div class="steamer-header">
+        <div class="steamer-title">💨 蒸籠 (蓄熱蒸煮)</div>
+        <button class="lid-btn" id="lid-toggle-btn">
+          <span id="lid-btn-icon">🔺</span> <span id="lid-btn-txt">開蒸籠蓋</span>
+        </button>
+      </div>
+      <div class="steamer-body" id="steamer-body">
+        <!-- 蒸籠透視蓋 -->
+        <div class="steamer-lid-overlay" id="steamer-lid-overlay">
+          <div class="lid-ribs-bar">
+            <span style="font-size:12px;">🛡️</span>
+            <div class="lid-ribs" id="lid-status-text">【 密封蒸煮中・可穿透視物 】</div>
+          </div>
+          <div class="steam-vent" style="left:20%; top:30%;"></div>
+          <div class="steam-vent" style="right:20%; top:35%;"></div>
+        </div>
+
+        <div class="food-slot empty" data-zone="steam" data-slot="0"></div>
+        <div class="food-slot empty" data-zone="steam" data-slot="1"></div>
+      </div>
+    </div>
+
+    <!-- 2. 下雙爐：滾沸火鍋 & 鐵板炙烤 -->
+    <div class="bottom-pots">
+      <!-- 涮涮火鍋 -->
+      <div class="pot-card shabu-block">
+        <div class="block-tag">
+          <span>🍲 涮涮火鍋</span>
+          <span style="font-size:10px; color:#ffd0d0;">滾水快涮</span>
+        </div>
+        <div class="slots-grid">
+          <div class="food-slot empty" data-zone="shabu" data-slot="0"></div>
+          <div class="food-slot empty" data-zone="shabu" data-slot="1"></div>
+        </div>
+      </div>
+
+      <!-- 鐵板炙烤 -->
+      <div class="pot-card grill-block">
+        <div class="block-tag">
+          <span>🥩 鐵板炙烤</span>
+          <span style="font-size:10px; color:#ffdd99;">雙面滋滋</span>
+        </div>
+        <div class="slots-grid">
+          <div class="food-slot empty" data-zone="grill" data-slot="0"></div>
+          <div class="food-slot empty" data-zone="grill" data-slot="1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部食材選擇托盤 -->
+  <div class="ingredient-deck">
+    <div class="deck-title">
+      <span>點選食材立即下鍋：</span>
+      <span id="hint-action" style="color:var(--accent-gold);">蒸籠需先掀蓋才能放入蒸物！</span>
+    </div>
+    <div class="deck-cards">
+      <!-- 蒸籠 2 項 -->
+      <div class="ingred-card" data-food="clam">
+        <div class="thumb" id="deck-clam-icon"></div>
+        <div class="name">香薑蛤蜊</div>
+        <span class="tag-type type-steam">蒸籠</span>
+      </div>
+      <div class="ingred-card" data-food="squid">
+        <div class="thumb" style="font-size:22px;">🦑</div>
+        <div class="name">澎湖脆卷</div>
+        <span class="tag-type type-steam">蒸籠</span>
+      </div>
+      <!-- 火鍋 2 項 -->
+      <div class="ingred-card" data-food="beef">
+        <div class="thumb" style="font-size:22px;">🥩</div>
+        <div class="name">雪花牛</div>
+        <span class="tag-type type-shabu">火鍋</span>
+      </div>
+      <div class="ingred-card" data-food="cabbage">
+        <div class="thumb" style="font-size:22px;">🥬</div>
+        <div class="name">高麗菜</div>
+        <span class="tag-type type-shabu">火鍋</span>
+      </div>
+      <!-- 鐵板 2 項 -->
+      <div class="ingred-card" data-food="pork">
+        <div class="thumb" style="font-size:22px;">🥓</div>
+        <div class="name">松阪豬</div>
+        <span class="tag-type type-grill">鐵板</span>
+      </div>
+      <div class="ingred-card" data-food="egg">
+        <div class="thumb" style="font-size:22px;">🍳</div>
+        <div class="name">蚵仔烘蛋</div>
+        <span class="tag-type type-grill">鐵板</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 開始選單 Modal (一鍋三饗特色說明) -->
+  <div class="modal-backdrop" id="modal-start">
+    <div class="modal-card">
+      <h2 class="modal-title">一鍋三饗・火候大廚</h2>
+      
+      <div class="tri-icons-row">
+        <div class="tri-icon-bubble bounce-icon-1">
+          <span class="icon">🍲</span>
+          <span class="label">涮火鍋</span>
+        </div>
+        <div class="tri-icon-bubble bounce-icon-2">
+          <span class="icon">🥩</span>
+          <span class="label">炙燒烤</span>
+        </div>
+        <div class="tri-icon-bubble bounce-icon-3">
+          <span class="icon">💨</span>
+          <span class="label">鮮蒸物</span>
+        </div>
+      </div>
+
+      <!-- 一鍋三饗特色說明 -->
+      <div class="features-list">
+        <div class="feature-item">
+          <span>🍲</span>
+          <div><strong>涮涮火鍋區</strong>：沸水滾燙急涮，雪花牛與高麗菜起鍋鮮脆多汁。</div>
+        </div>
+        <div class="feature-item">
+          <span>🥩</span>
+          <div><strong>鐵板炙烤區</strong>：高溫炙燒封鎖肉汁，松阪豬與烘蛋抓準時機翻面金黃酥香。</div>
+        </div>
+        <div class="feature-item">
+          <span>💨</span>
+          <div><strong>專利蒸籠區</strong>：先<strong>開蓋放入</strong>食材，再<strong>蓋上透視蓋</strong>聚熱蒸煮，鮮美原汁滴滴不漏。</div>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btn-game-start">開始營業・挑戰神廚</button>
+    </div>
+  </div>
+
+  <!-- 結束選單 Modal -->
+  <div class="modal-backdrop" id="modal-gameover" style="display:none;">
+    <div class="modal-card">
+      <h2 class="modal-title">營業結算</h2>
+      <div style="font-size: 40px; margin:4px 0;" id="end-rank-icon">👑</div>
+      <h3 style="margin: 0; color:var(--accent-gold);" id="end-rank-title">三饗特級廚神</h3>
+      <div style="font-size:14px; color:#eee; text-align:left; width:100%; padding:0 8px; line-height:1.7;">
+        <div>總營業額：<strong style="color:var(--accent-gold); font-size:18px;">$<span id="end-score">0</span></strong></div>
+        <div>完美出餐：<strong id="end-perfect">0</strong> 份</div>
+        <div>最高連擊：<strong id="end-max-combo">0</strong> Combo</div>
+      </div>
+      <button class="btn-start" id="btn-game-replay">再次挑戰</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* --- 1. SVG 向量圖像庫 --- */
+const SVG_ICONS = {
+  clamRaw: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="34" rx="26" ry="20" fill="#9e8574" stroke="#4a372c" stroke-width="2.5"/>
+      <path d="M12 34 Q32 20 52 34" stroke="#33241b" stroke-width="1.8" fill="none"/>
+      <path d="M16 38 Q32 26 48 38" stroke="#33241b" stroke-width="1.5" fill="none"/>
+      <path d="M22 42 Q32 32 42 42" stroke="#33241b" stroke-width="1.2" fill="none"/>
+    </svg>`,
+  clamCooked: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 38 C6 20 28 8 32 18 C36 8 58 20 56 38 C54 50 38 52 32 50 C26 52 10 50 8 38Z" fill="#bfa58f" stroke="#523d30" stroke-width="2.5"/>
+      <path d="M12 36 C18 16 30 16 32 24" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <ellipse cx="32" cy="34" rx="15" ry="11" fill="#ffb85c" stroke="#d35400" stroke-width="2"/>
+      <ellipse cx="32" cy="35" rx="8" ry="5" fill="#ffe099"/>
+      <line x1="26" y1="29" x2="38" y2="35" stroke="#f1c40f" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="36" y1="28" x2="28" y2="38" stroke="#27ae60" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="24" y1="34" x2="35" y2="39" stroke="#f39c12" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+  clamBurnt: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="34" rx="24" ry="18" fill="#3a302a" stroke="#1c1613" stroke-width="2.5"/>
+      <ellipse cx="32" cy="34" rx="9" ry="6" fill="#1f1814"/>
+    </svg>`
+};
+
+document.getElementById('deck-clam-icon').innerHTML = SVG_ICONS.clamCooked;
+
+/* --- 2. 食材資料定義 --- */
+const INGREDIENTS = {
+  clam: { id: 'clam', name: '香薑蛤蜊', zone: 'steam', time: 5.0, price: 90, emoji: '🦪', type: 'steam' },
+  squid: { id: 'squid', name: '澎湖脆卷', zone: 'steam', time: 4.6, price: 85, emoji: '🦑', type: 'steam' },
+  beef: { id: 'beef', name: '雪花牛', zone: 'shabu', time: 3.2, price: 95, emoji: '🥩', type: 'shabu' },
+  cabbage: { id: 'cabbage', name: '高麗菜', zone: 'shabu', time: 3.6, price: 50, emoji: '🥬', type: 'shabu' },
+  pork: { id: 'pork', name: '松阪豬', zone: 'grill', time: 4.8, price: 100, emoji: '🥓', type: 'grill', needFlip: true },
+  egg: { id: 'egg', name: '蚵仔烘蛋', zone: 'grill', time: 4.4, price: 80, emoji: '🍳', type: 'grill', needFlip: true }
+};
+
+/* --- 3. 組合餐點庫定義 --- */
+const COMBO_SETS = [
+  { name: '海味極鮮雙饗', items: ['clam', 'squid'] },
+  { name: '頂級海陸盛宴', items: ['beef', 'clam'] },
+  { name: '山海炙燒特餐', items: ['pork', 'squid'] },
+  { name: '清甜老饕雙拼', items: ['beef', 'cabbage'] },
+  { name: '鐵板極致雙品', items: ['pork', 'egg'] },
+  { name: '海陸烘烤套餐', items: ['egg', 'beef'] },
+  { name: '蒸烤鮮甜特選', items: ['clam', 'pork'] },
+  { name: '三饗招牌全席', items: ['clam', 'beef', 'pork'] },
+  { name: '健康鮮蔬雙享', items: ['cabbage', 'squid'] }
+];
+
+/* --- 4. Web Audio 音效與 BGM 引擎 --- */
+class SoundMaster {
+  constructor() {
+    this.ctx = null;
+    this.bgmEnabled = true;
+    this.sfxEnabled = true;
+    this.bgmTimer = null;
+    this.bgmStep = 0;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playSfx(type) {
+    if (!this.sfxEnabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    if (type === 'drop') {
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.12);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } else if (type === 'flip') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(450, t);
+      osc.frequency.exponentialRampToValueAtTime(680, t + 0.15);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    } else if (type === 'steam') {
+      const bufSize = this.ctx.sampleRate * 0.25;
+      const buffer = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1800;
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      noise.start(t);
+    } else if (type === 'serve') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587, t);
+      osc.frequency.setValueAtTime(880, t + 0.08);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    } else if (type === 'burnt' || type === 'warn') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.linearRampToValueAtTime(90, t + 0.25);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t);
+      osc.stop(t + 0.25);
+    }
+  }
+
+  startBGM() {
+    if (!this.bgmEnabled || this.bgmTimer) return;
+    this.init();
+    const melody = [392, 440, 493, 587, 659, 587, 493, 440];
+    const bass = [196, 196, 246, 293];
+
+    this.bgmTimer = setInterval(() => {
+      if (!this.bgmEnabled || !this.ctx) return;
+      const t = this.ctx.currentTime;
+      
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      const freq = melody[this.bgmStep % melody.length];
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.18);
+
+      if (this.bgmStep % 2 === 0) {
+        const bOsc = this.ctx.createOscillator();
+        const bGain = this.ctx.createGain();
+        bOsc.type = 'triangle';
+        bOsc.frequency.setValueAtTime(bass[(this.bgmStep / 2) % bass.length], t);
+        bGain.gain.setValueAtTime(0.1, t);
+        bGain.gain.linearRampToValueAtTime(0.01, t + 0.22);
+        bOsc.connect(bGain);
+        bGain.connect(this.ctx.destination);
+        bOsc.start(t);
+        bOsc.stop(t + 0.24);
+      }
+
+      this.bgmStep++;
+    }, 220);
+  }
+
+  stopBGM() {
+    if (this.bgmTimer) {
+      clearInterval(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  }
+}
+
+/* --- 5. 遊戲主控制器 --- */
+class PotGame {
+  constructor() {
+    this.sound = new SoundMaster();
+    this.score = 0;
+    this.timeLeft = 60;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.perfectCount = 0;
+    this.isPlaying = false;
+    this.feverTime = 0;
+
+    this.isLidClosed = false; // 初始開蓋，方便玩家直接放入食材
+
+    this.slots = {
+      steam: [null, null],
+      shabu: [null, null],
+      grill: [null, null]
+    };
+
+    this.customerCounter = 0;
+    this.customers = [];
+
+    this.gameTicker = null;
+    this.bindDom();
+  }
+
+  bindDom() {
+    const lidBtn = document.getElementById('lid-toggle-btn');
+    lidBtn.addEventListener('click', () => this.toggleLid());
+
+    document.getElementById('steamer-lid-overlay').addEventListener('click', () => this.toggleLid());
+
+    document.getElementById('btn-bgm').addEventListener('click', (e) => {
+      this.sound.bgmEnabled = !this.sound.bgmEnabled;
+      e.target.textContent = this.sound.bgmEnabled ? '🎵' : '🔇';
+      if (this.sound.bgmEnabled && this.isPlaying) this.sound.startBGM();
+      else this.sound.stopBGM();
+    });
+
+    document.getElementById('btn-sfx').addEventListener('click', (e) => {
+      this.sound.sfxEnabled = !this.sound.sfxEnabled;
+      e.target.textContent = this.sound.sfxEnabled ? '🔊' : '🔈';
+    });
+
+    document.getElementById('btn-game-start').addEventListener('click', () => {
+      this.sound.init();
+      document.getElementById('modal-start').style.display = 'none';
+      this.startGame();
+    });
+
+    document.getElementById('btn-game-replay').addEventListener('click', () => {
+      document.getElementById('modal-gameover').style.display = 'none';
+      this.startGame();
+    });
+
+    document.querySelectorAll('.ingred-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const foodId = card.dataset.food;
+        this.deployFood(foodId);
+      });
+    });
+
+    document.querySelectorAll('.food-slot').forEach(el => {
+      el.addEventListener('click', () => {
+        const zone = el.dataset.zone;
+        const slotIdx = parseInt(el.dataset.slot);
+        this.interactSlot(zone, slotIdx);
+      });
+    });
+  }
+
+  toggleLid() {
+    this.isLidClosed = !this.isLidClosed;
+    const overlay = document.getElementById('steamer-lid-overlay');
+    const lidBtn = document.getElementById('lid-toggle-btn');
+    const lidIcon = document.getElementById('lid-btn-icon');
+    const lidTxt = document.getElementById('lid-btn-txt');
+    const hintAction = document.getElementById('hint-action');
+
+    if (this.isLidClosed) {
+      overlay.classList.remove('open');
+      lidBtn.classList.remove('opened');
+      lidIcon.textContent = '🔺';
+      lidTxt.textContent = '開蒸籠蓋';
+      hintAction.textContent = '蓋上鍋蓋蒸煮中 (可透視內容物)';
+      this.sound.playSfx('drop');
+    } else {
+      overlay.classList.add('open');
+      lidBtn.classList.add('opened');
+      lidIcon.textContent = '🔻';
+      lidTxt.textContent = '蓋蒸籠蓋';
+      hintAction.textContent = '蒸籠已開蓋：可放入食材或採收';
+      this.sound.playSfx('steam');
+      this.spawnSteamPuffs();
+    }
+    this.renderAllSlots();
+  }
+
+  spawnSteamPuffs() {
+    const steamer = document.getElementById('steamer-body');
+    const rect = steamer.getBoundingClientRect();
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'steam-particle';
+      const size = 20 + Math.random() * 26;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = (Math.random() * (rect.width - 40) + 20) + 'px';
+      p.style.top = '25px';
+      p.style.setProperty('--dx', (Math.random() * 50 - 25) + 'px');
+      steamer.appendChild(p);
+      setTimeout(() => p.remove(), 950);
+    }
+  }
+
+  startGame() {
+    this.score = 0;
+    this.timeLeft = 60;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.perfectCount = 0;
+    this.feverTime = 0;
+    this.isPlaying = true;
+    this.isLidClosed = false; // 開場先開蓋，讓玩家放置蒸物
+
+    // 設定初始蒸籠為開蓋狀態
+    document.getElementById('steamer-lid-overlay').classList.add('open');
+    document.getElementById('steamer-lid-overlay').classList.remove('has-ready');
+    document.getElementById('lid-toggle-btn').classList.add('opened');
+    document.getElementById('lid-btn-icon').textContent = '🔻';
+    document.getElementById('lid-btn-txt').textContent = '蓋蒸籠蓋';
+    document.getElementById('hint-action').textContent = '蒸籠已開蓋：請放入食材後蓋蓋';
+
+    for (let z in this.slots) {
+      this.slots[z] = [null, null];
+    }
+    
+    document.getElementById('customers-list').innerHTML = '';
+    this.customers = [];
+
+    this.updateStatsUi();
+    this.renderAllSlots();
+
+    this.spawnCustomer();
+    this.spawnCustomer();
+
+    this.sound.startBGM();
+
+    if (this.gameTicker) clearInterval(this.gameTicker);
+    this.gameTicker = setInterval(() => this.tick(), 100);
+  }
+
+  deployFood(foodId) {
+    if (!this.isPlaying) return;
+    const foodDef = INGREDIENTS[foodId];
+    const targetZone = foodDef.zone;
+
+    // ★ 關鍵機制：若要放入蒸籠，但鍋蓋處於蓋上狀態，則禁止放入並給予強烈提示！
+    if (targetZone === 'steam' && this.isLidClosed) {
+      const steamerEl = document.querySelector('.steamer-block');
+      const rect = steamerEl.getBoundingClientRect();
+      this.showFloatScore('⚠️ 請先開蒸籠蓋！', rect.left + rect.width / 2 - 50, rect.top + 20, true);
+      this.sound.playSfx('warn');
+      this.vibrate([60, 40, 60]);
+      return;
+    }
+
+    const slotArr = this.slots[targetZone];
+    const freeIdx = slotArr.findIndex(item => item === null);
+    if (freeIdx === -1) {
+      this.vibrate(50);
+      return;
+    }
+
+    slotArr[freeIdx] = {
+      ...foodDef,
+      elapsed: 0,
+      flipped: false,
+      state: 'raw'
+    };
+
+    this.sound.playSfx('drop');
+    this.vibrate(30);
+    this.renderSlot(targetZone, freeIdx);
+  }
+
+  interactSlot(zone, slotIdx) {
+    if (!this.isPlaying) return;
+    const item = this.slots[zone][slotIdx];
+    if (!item) return;
+
+    if (zone === 'steam' && this.isLidClosed) {
+      this.toggleLid();
+      return;
+    }
+
+    if (item.needFlip && !item.flipped) {
+      if (item.state === 'flip') {
+        item.flipped = true;
+        item.state = 'cooking';
+        item.elapsed = item.time * 0.5;
+        this.sound.playSfx('flip');
+        this.vibrate(40);
+        this.renderSlot(zone, slotIdx);
+        return;
+      }
+    }
+
+    if (item.state === 'perfect') {
+      this.serveItem(item, zone, slotIdx, true);
+    } else if (item.state === 'burnt') {
+      this.slots[zone][slotIdx] = null;
+      this.sound.playSfx('burnt');
+      this.vibrate(100);
+      this.renderSlot(zone, slotIdx);
+    } else {
+      this.slots[zone][slotIdx] = null;
+      this.sound.playSfx('burnt');
+      this.vibrate(60);
+      this.renderSlot(zone, slotIdx);
+    }
+  }
+
+  serveItem(item, zone, slotIdx, isPerfect) {
+    let matched = false;
+    let matchedCust = null;
+    let orderIndex = -1;
+
+    for (let cust of this.customers) {
+      const idx = cust.orders.findIndex(ord => ord.id === item.id && !ord.served);
+      if (idx !== -1) {
+        cust.orders[idx].served = true;
+        matched = true;
+        matchedCust = cust;
+        orderIndex = idx;
+        break;
+      }
+    }
+
+    const slotEl = document.querySelector(`.food-slot[data-zone="${zone}"][data-slot="${slotIdx}"]`);
+    const rect = slotEl.getBoundingClientRect();
+
+    if (matched) {
+      let earned = item.price;
+      this.combo++;
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      this.perfectCount++;
+
+      if (this.feverTime > 0) earned *= 2;
+      earned += (this.combo * 5);
+      this.score += earned;
+
+      this.sound.playSfx('serve');
+      this.vibrate([40, 30, 40]);
+      this.showFloatScore(`+$${earned}! Combo ${this.combo}`, rect.left + 20, rect.top);
+
+      if (matchedCust) {
+        const custEl = document.getElementById(`cust-${matchedCust.id}`);
+        if (custEl) {
+          const tags = custEl.querySelectorAll('.order-tag');
+          if (tags[orderIndex]) tags[orderIndex].classList.add('done');
+        }
+      }
+
+      if (this.combo >= 3 && this.feverTime <= 0) {
+        this.triggerFever();
+      }
+    } else {
+      const fallback = Math.floor(item.price * 0.5);
+      this.score += fallback;
+      this.combo = 0;
+      this.sound.playSfx('serve');
+      this.showFloatScore(`+$${fallback}`, rect.left + 20, rect.top);
+    }
+
+    this.slots[zone][slotIdx] = null;
+    this.renderSlot(zone, slotIdx);
+    this.updateStatsUi();
+    this.checkCustomerCompleted();
+  }
+
+  triggerFever() {
+    this.feverTime = 10;
+    const banner = document.getElementById('fever-tag');
+    banner.style.opacity = '1';
+    document.getElementById('pot-stage').classList.add('fever-glow');
+    this.vibrate([80, 50, 80]);
+  }
+
+  tick() {
+    this.timeLeft -= 0.1;
+    if (this.timeLeft <= 0) {
+      this.timeLeft = 0;
+      this.endGame();
+      return;
+    }
+
+    if (this.feverTime > 0) {
+      this.feverTime -= 0.1;
+      if (this.feverTime <= 0) {
+        document.getElementById('fever-tag').style.opacity = '0';
+        document.getElementById('pot-stage').classList.remove('fever-glow');
+      }
+    }
+
+    let hasSteamReady = false;
+
+    for (let zone in this.slots) {
+      for (let i = 0; i < this.slots[zone].length; i++) {
+        const item = this.slots[zone][i];
+        if (!item) continue;
+
+        let speedMult = 1.0;
+        if (zone === 'steam') {
+          speedMult = this.isLidClosed ? 1.0 : 0.0;
+        }
+
+        if (this.feverTime > 0 && speedMult > 0) speedMult *= 1.25;
+
+        item.elapsed += 0.1 * speedMult;
+        this.updateItemState(item, zone);
+        this.renderSlot(zone, i);
+
+        if (zone === 'steam' && item.state === 'perfect') {
+          hasSteamReady = true;
+        }
+      }
+    }
+
+    const lidOverlay = document.getElementById('steamer-lid-overlay');
+    const lidStatusText = document.getElementById('lid-status-text');
+    if (hasSteamReady) {
+      lidOverlay.classList.add('has-ready');
+      lidStatusText.textContent = '✨ 食材已熟成・點擊開蓋採收！';
+    } else {
+      lidOverlay.classList.remove('has-ready');
+      lidStatusText.textContent = '【 密封蒸煮中・可穿透視物 】';
+    }
+
+    for (let i = this.customers.length - 1; i >= 0; i--) {
+      const c = this.customers[i];
+      c.patience -= 0.1;
+      if (c.patience <= 0) {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) el.remove();
+        this.customers.splice(i, 1);
+        this.combo = 0;
+        this.updateStatsUi();
+        this.vibrate(150);
+      } else {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) {
+          const fill = el.querySelector('.patience-fill');
+          const patPct = Math.max(0, (c.patience / c.maxPatience) * 100);
+          fill.style.width = patPct + '%';
+          if (patPct < 30) fill.style.backgroundColor = 'var(--accent-red)';
+          else if (patPct < 60) fill.style.backgroundColor = 'var(--accent-gold)';
+          else fill.style.backgroundColor = 'var(--accent-green)';
+        }
+      }
+    }
+
+    if (this.customers.length < 3 && Math.random() < 0.04) {
+      this.spawnCustomer();
+    }
+
+    document.getElementById('timer-txt').textContent = Math.ceil(this.timeLeft);
+  }
+
+  updateItemState(item, zone) {
+    const target = item.time;
+    if (item.needFlip && !item.flipped) {
+      const halfTime = target * 0.5;
+      if (item.elapsed >= halfTime && item.elapsed < halfTime + 2.0) {
+        item.state = 'flip';
+      } else if (item.elapsed >= halfTime + 2.0) {
+        item.state = 'burnt';
+      } else {
+        item.state = 'cooking';
+      }
+      return;
+    }
+
+    if (item.elapsed < target) {
+      item.state = 'cooking';
+    } else if (item.elapsed >= target && item.elapsed <= target + 3.2) {
+      item.state = 'perfect';
+    } else {
+      item.state = 'burnt';
+    }
+  }
+
+  spawnCustomer() {
+    const avatars = ['👨‍💼', '👩‍🦰', '👴', '👧', '🧑‍🍳', '🧔'];
+    const combo = COMBO_SETS[Math.floor(Math.random() * COMBO_SETS.length)];
+    const orders = combo.items.map(foodKey => ({
+      id: foodKey,
+      served: false
+    }));
+
+    const custId = ++this.customerCounter;
+    const newCust = {
+      id: custId,
+      comboName: combo.name,
+      avatar: avatars[Math.floor(Math.random() * avatars.length)],
+      patience: 25,
+      maxPatience: 25,
+      orders: orders
+    };
+    this.customers.push(newCust);
+
+    const list = document.getElementById('customers-list');
+    const card = document.createElement('div');
+    card.className = 'customer-card';
+    card.id = `cust-${custId}`;
+
+    let ordersHtml = '';
+    newCust.orders.forEach(o => {
+      const f = INGREDIENTS[o.id];
+      let iconView = f.emoji || '🦪';
+      ordersHtml += `
+        <div class="order-tag ${o.served ? 'done' : ''}">
+          <span style="font-size:12px;">${iconView}</span>
+          <span class="order-tag-name">${f.name}</span>
+        </div>
+      `;
+    });
+
+    card.innerHTML = `
+      <div class="cust-top">
+        <span class="cust-avatar">${newCust.avatar}</span>
+        <div class="cust-combo-name" title="${newCust.comboName}">🍱 ${newCust.comboName}</div>
+      </div>
+      <div class="cust-patience-bar">
+        <div class="patience-fill" style="width:100%; background:var(--accent-green);"></div>
+      </div>
+      <div class="cust-order">${ordersHtml}</div>
+    `;
+    list.appendChild(card);
+  }
+
+  checkCustomerCompleted() {
+    for (let i = this.customers.length - 1; i >= 0; i--) {
+      const c = this.customers[i];
+      const allDone = c.orders.every(o => o.served);
+      if (allDone) {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) el.remove();
+        this.customers.splice(i, 1);
+        this.score += 35;
+        this.showFloatScore(`${c.comboName} 完成! +$35`, window.innerWidth / 2, 80);
+      }
+    }
+  }
+
+  renderSlot(zone, idx) {
+    const el = document.querySelector(`.food-slot[data-zone="${zone}"][data-slot="${idx}"]`);
+    const item = this.slots[zone][idx];
+    if (!item) {
+      el.className = 'food-slot empty';
+      el.innerHTML = '';
+      return;
+    }
+
+    el.className = 'food-slot';
+
+    let visualHtml = '';
+    if (item.id === 'clam') {
+      if (item.state === 'burnt') visualHtml = SVG_ICONS.clamBurnt;
+      else if (item.state === 'perfect') visualHtml = SVG_ICONS.clamCooked;
+      else visualHtml = SVG_ICONS.clamRaw;
+    } else {
+      visualHtml = `<span class="food-emoji">${item.emoji}</span>`;
+    }
+
+    let badgeClass = 'state-cooking';
+    let badgeText = '蒸煮中';
+
+    if (zone === 'steam' && !this.isLidClosed) {
+      badgeClass = 'state-stop';
+      badgeText = '⚠️需蓋蓋';
+    } else if (item.state === 'flip') {
+      badgeClass = 'state-flip';
+      badgeText = '快翻面！';
+    } else if (item.state === 'perfect') {
+      badgeClass = 'state-perfect';
+      badgeText = '完美熟成！';
+    } else if (item.state === 'burnt') {
+      badgeClass = 'state-burnt';
+      badgeText = '已焦黑';
+    }
+
+    const pct = Math.min(100, Math.round((item.elapsed / item.time) * 100));
+
+    el.innerHTML = `
+      <div class="cooking-item">
+        <div class="food-visual">${visualHtml}</div>
+        <div class="food-meta">
+          <div class="food-name">${item.name}</div>
+          <div class="state-badge ${badgeClass}">${badgeText}</div>
+          <div class="cook-progress"><div class="cook-fill" style="width:${pct}%;"></div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderAllSlots() {
+    for (let zone in this.slots) {
+      for (let i = 0; i < this.slots[zone].length; i++) {
+        this.renderSlot(zone, i);
+      }
+    }
+  }
+
+  updateStatsUi() {
+    document.getElementById('score-txt').textContent = this.score;
+    document.getElementById('combo-txt').textContent = this.combo;
+  }
+
+  showFloatScore(text, x, y, isWarn = false) {
+    const el = document.createElement('div');
+    el.className = `score-float ${isWarn ? 'score-warning' : ''}`;
+    el.textContent = text;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    document.getElementById('game-container').appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+
+  vibrate(pattern) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(pattern); } catch(e) {}
+    }
+  }
+
+  endGame() {
+    this.isPlaying = false;
+    clearInterval(this.gameTicker);
+    this.sound.stopBGM();
+
+    let rankIcon = '🍳';
+    let rankTitle = '三饗見習廚師';
+    if (this.score >= 1400) { rankIcon = '👑'; rankTitle = '三饗特級廚神'; }
+    else if (this.score >= 850) { rankIcon = '🏆'; rankTitle = '首席料理掌門'; }
+    else if (this.score >= 450) { rankIcon = '⭐'; rankTitle = '人氣火候行家'; }
+
+    document.getElementById('end-rank-icon').textContent = rankIcon;
+    document.getElementById('end-rank-title').textContent = rankTitle;
+    document.getElementById('end-score').textContent = this.score;
+    document.getElementById('end-perfect').textContent = this.perfectCount;
+    document.getElementById('end-max-combo').textContent = this.maxCombo;
+
+    document.getElementById('modal-gameover').style.display = 'flex';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new PotGame();
+});
+</script>
+</body>
+</html>
