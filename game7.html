@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>一鍋三饗・極致火候大廚</title>
+  <style>
+    :root {
+      --bg-dark: #121013;
+      --panel-bg: rgba(30, 26, 32, 0.94);
+      --accent-gold: #ffb834;
+      --accent-red: #ff4747;
+      --accent-green: #2ecc71;
+      --accent-blue: #3498db;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      background-color: var(--bg-dark);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 440px;
+      height: 100dvh;
+      background: radial-gradient(circle at 50% 30%, #291e1b, #120e10 85%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 35px rgba(0,0,0,0.8);
+      transition: box-shadow 0.2s;
+    }
+
+    .panic-flash {
+      animation: panicPulse 0.45s infinite alternate !important;
+    }
+    @keyframes panicPulse {
+      0% { box-shadow: inset 0 0 10px rgba(255, 71, 71, 0.3); }
+      100% { box-shadow: inset 0 0 45px rgba(255, 71, 71, 0.95), 0 0 25px rgba(255, 71, 71, 0.9); }
+    }
+
+    .header-bar {
+      padding: calc(var(--safe-top) + 6px) 12px 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(18, 14, 16, 0.85);
+      border-bottom: 1px solid rgba(255, 184, 52, 0.25);
+      z-index: 30;
+    }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .stat-pill span { color: var(--accent-gold); font-size: 15px; }
+    
+    .timer-alert {
+      color: var(--accent-red) !important;
+      animation: timerBeat 0.5s infinite alternate;
+    }
+    @keyframes timerBeat {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.2); }
+    }
+
+    .audio-btns { display: flex; gap: 6px; }
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .customers-section {
+      height: 115px;
+      padding: 6px 10px;
+      display: flex;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 25;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .customers-section::-webkit-scrollbar { display: none; }
+    .customer-card {
+      flex: 0 0 162px;
+      background: rgba(38, 32, 40, 0.95);
+      border: 1.5px solid rgba(255, 184, 52, 0.4);
+      border-radius: 12px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .customer-card.vip {
+      border: 2px solid #ffd700;
+      background: linear-gradient(135deg, rgba(65, 45, 15, 0.95), rgba(38, 32, 40, 0.95));
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+    }
+    .vip-tag {
+      position: absolute;
+      top: -8px;
+      right: 6px;
+      background: #ffd700;
+      color: #000;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .cust-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+    .cust-avatar { font-size: 18px; }
+    .cust-combo-name {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cust-patience-bar {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .patience-fill {
+      height: 100%;
+      background: var(--accent-green);
+      will-change: width;
+    }
+    .cust-order {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .order-tag {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      position: relative;
+    }
+    .order-tag-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #eee;
+    }
+    .order-tag.done {
+      border-color: var(--accent-green);
+      background: rgba(46, 204, 113, 0.25);
+    }
+    .order-tag.done .order-tag-name {
+      color: #85e8a7;
+      text-decoration: line-through;
+    }
+
+    .pot-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 12px;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    /* 享鮮蒸 */
+    .steamer-block {
+      background: linear-gradient(180deg, #443425 0%, #2c2116 100%);
+      border: 2px solid #94714d;
+      border-radius: 18px;
+      padding: 8px 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .steamer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .steamer-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #dfba88;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .lid-btn {
+      background: #27ae60;
+      border: 1px solid #70e6a2;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lid-btn.opened {
+      background: #d35400;
+      border-color: #ff9f43;
+    }
+
+    .steamer-body {
+      position: relative;
+      background: #1d1610;
+      border-radius: 14px;
+      padding: 8px;
+      min-height: 84px;
+      display: flex;
+      gap: 10px;
+      justify-content: space-around;
+      border: 1px solid #57412e;
+      overflow: hidden;
+    }
+
+    .steamer-lid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 230, 190, 0.24) 0%, rgba(68, 48, 30, 0.72) 80%);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+      border: 3px solid rgba(186, 140, 89, 0.85);
+      border-radius: 14px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+      transition: transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.15), opacity 0.25s;
+      cursor: pointer;
+    }
+    .steamer-lid-overlay.open {
+      transform: translateY(-115%);
+      opacity: 0;
+      pointer-events: none !important;
+      visibility: hidden;
+    }
+    .steamer-lid-overlay.has-ready {
+      border-color: #2ecc71;
+      box-shadow: 0 0 14px #2ecc71, inset 0 0 15px rgba(46, 204, 113, 0.4);
+      animation: pulsePerfect 0.8s infinite alternate;
+    }
+
+    .lid-ribs-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(30, 20, 12, 0.75);
+      padding: 2px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 216, 168, 0.3);
+      pointer-events: none;
+    }
+    .lid-ribs {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd8a8;
+      letter-spacing: 0.5px;
+    }
+    .steam-vent {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffecb3;
+      border-radius: 50%;
+      filter: blur(1px);
+      animation: ventPuff 1s infinite linear;
+      pointer-events: none;
+    }
+
+    /* 雙下爐：左：享燒肉(前鍋) | 右：享涮涮(後鍋) */
+    .bottom-pots {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .pot-card {
+      border-radius: 18px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    }
+    .grill-block {
+      background: repeating-linear-gradient(0deg, #2a2828, #2a2828 10px, #181717 10px, #181717 16px);
+      border: 2px solid #999;
+    }
+    .shabu-block {
+      background: radial-gradient(circle at 50% 50%, #751b1b, #3d0e0e);
+      border: 2px solid #ff7b7b;
+    }
+    .shabu-block::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(255,140,50,0.3) 0%, transparent 70%);
+      animation: boilingWave 2s infinite ease-in-out;
+      pointer-events: none;
+    }
+    .block-tag {
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      z-index: 2;
+    }
+    .slots-grid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    /* 食物槽位 */
+    .food-slot {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1.5px dashed rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 5;
+    }
+    .food-slot:hover {
+      border-color: rgba(255, 184, 52, 0.6);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .food-slot.empty::after {
+      content: '點選食材烹調';
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .cooking-item {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      position: relative;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+    .food-visual {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .food-visual svg { width: 38px; height: 38px; }
+    .food-emoji { font-size: 26px; }
+    .food-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .food-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .state-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 6px;
+      font-weight: 800;
+      text-align: right;
+      white-space: normal;
+      max-width: 110px;
+      line-height: 1.15;
+    }
+    .state-raw { background: #555; color: #eee; }
+    .state-cooking { background: #3498db; color: #fff; }
+    .state-stop {
+      background: #e67e22;
+      color: #fff;
+      animation: pulseAttention 0.8s infinite alternate;
+    }
+    .state-flip {
+      background: #f39c12;
+      color: #000;
+      animation: pulseAttention 0.6s infinite alternate;
+      box-shadow: 0 0 8px #f39c12;
+    }
+    .state-perfect {
+      background: #2ecc71;
+      color: #000;
+      animation: pulsePerfect 0.6s infinite alternate;
+      box-shadow: 0 0 12px #2ecc71;
+      font-weight: 900;
+    }
+    .state-burnt { background: #c0392b; color: #fff; }
+
+    .cook-progress {
+      width: 55px;
+      height: 4px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .cook-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-gold);
+    }
+
+    .ingredient-deck {
+      padding: 6px 10px calc(var(--safe-bottom) + 6px) 10px;
+      background: rgba(18, 14, 16, 0.96);
+      border-top: 1px solid rgba(255, 184, 52, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      z-index: 20;
+    }
+    .deck-title {
+      font-size: 11px;
+      color: #bbb;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+    .deck-cards {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .ingred-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 5px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+    .ingred-card:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .ingred-card:active {
+      transform: scale(0.92);
+      background: rgba(255, 184, 52, 0.25);
+    }
+    .ingred-card .thumb {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .ingred-card .name {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fff;
+      transform: scale(0.95);
+      pointer-events: none;
+    }
+    .ingred-card .tag-type {
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #fff;
+      pointer-events: none;
+    }
+    .type-steam { background: #8e6234; }
+    .type-shabu { background: #c0392b; }
+    .type-grill { background: #7f8c8d; }
+
+    .fever-glow {
+      animation: feverBorder 0.8s infinite alternate !important;
+    }
+    @keyframes feverBorder {
+      0% { box-shadow: inset 0 0 20px #ff9f1a, 0 0 20px #ff9f1a; }
+      100% { box-shadow: inset 0 0 35px #ff3838, 0 0 35px #ff3838; }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes boilingWave {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+    @keyframes pulseAttention {
+      0% { transform: scale(0.96); }
+      100% { transform: scale(1.05); }
+    }
+    @keyframes pulsePerfect {
+      0% { transform: scale(1); filter: drop-shadow(0 0 2px #2ecc71); }
+      100% { transform: scale(1.08); filter: drop-shadow(0 0 8px #2ecc71); }
+    }
+    @keyframes ventPuff {
+      0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+      100% { transform: translateY(-16px) scale(2.2); opacity: 0; }
+    }
+
+    .bounce-icon-1 { animation: floatBounce 1.8s ease-in-out infinite; }
+    .bounce-icon-2 { animation: floatBounce 2.1s ease-in-out infinite 0.2s; }
+    .bounce-icon-3 { animation: floatBounce 1.9s ease-in-out infinite 0.4s; }
+    @keyframes floatBounce {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      50% { transform: translateY(-10px) rotate(4deg) scale(1.08); }
+    }
+
+    .score-float {
+      position: absolute;
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--accent-gold);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      pointer-events: none;
+      animation: floatUpFade 0.8s forwards;
+      z-index: 100;
+    }
+    .score-warning {
+      color: var(--accent-red) !important;
+      font-size: 16px !important;
+    }
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-36px); }
+    }
+
+    .steam-particle {
+      position: absolute;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      animation: steamRise 1s forwards ease-out;
+      z-index: 25;
+    }
+    @keyframes steamRise {
+      0% { transform: translate(0, 0) scale(0.6); opacity: 0.8; }
+      100% { transform: translate(var(--dx), -70px) scale(2.5); opacity: 0; }
+    }
+
+    .flying-dish {
+      position: absolute;
+      z-index: 999;
+      pointer-events: none;
+      font-size: 26px;
+      transition: transform 0.42s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.42s;
+      filter: drop-shadow(0 4px 10px rgba(255, 184, 52, 0.8));
+    }
+
+    .tri-banner {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(135deg, #f39c12, #e74c3c);
+      border: 2px solid #ffd700;
+      padding: 6px 18px;
+      border-radius: 24px;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+      z-index: 60;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .tri-banner.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    /* ★ 絲滑流暢的 3 秒開場倒數動態卡片設計 */
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(35, 24, 20, 0.96), rgba(12, 9, 11, 0.98));
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .countdown-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .countdown-card-wrapper {
+      background: rgba(45, 35, 38, 0.9);
+      border: 2.5px solid var(--accent-gold);
+      border-radius: 28px;
+      padding: 30px 45px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), inset 0 2px 8px rgba(255, 184, 52, 0.3);
+      transform: scale(0.9);
+      animation: cardZoomIn 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+    }
+    @keyframes cardZoomIn {
+      to { transform: scale(1); }
+    }
+    .countdown-number {
+      font-size: 88px;
+      font-weight: 900;
+      color: var(--accent-gold);
+      text-shadow: 0 4px 20px rgba(255, 184, 52, 0.6);
+      line-height: 1;
+      /* 每次數字切換時的彈跳過渡動畫 */
+      animation: numPulse 0.85s cubic-bezier(0.25, 1.5, 0.5, 1) infinite;
+    }
+    @keyframes numPulse {
+      0% { transform: scale(0.65); opacity: 0.2; }
+      40% { transform: scale(1.12); opacity: 1; filter: drop-shadow(0 0 12px #ff4747); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .countdown-text {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffd8a8;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 8, 10, 0.94);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+    }
+    .modal-card {
+      background: #251e22;
+      border: 2px solid var(--accent-gold);
+      border-radius: 20px;
+      padding: 18px 14px;
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+    .modal-title {
+      font-size: 21px;
+      font-weight: 900;
+      color: var(--accent-gold);
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    .tri-icons-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin: 2px 0 4px 0;
+    }
+    .tri-icon-bubble {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 184, 52, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .tri-icon-bubble span.icon { font-size: 24px; }
+    .tri-icon-bubble span.label { font-size: 10px; font-weight: 800; color: #ffd8a8; }
+
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 184, 52, 0.2);
+    }
+    .feature-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #eee;
+    }
+    .feature-item strong {
+      color: var(--accent-gold);
+      font-size: 12.5px;
+    }
+
+    .panel-guide-box {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(35, 27, 30, 0.95), rgba(20, 16, 18, 0.95));
+      border: 1.5px solid rgba(255, 184, 52, 0.4);
+      border-radius: 16px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+    .panel-guide-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+      padding-bottom: 6px;
+    }
+    .panel-guide-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #e6e6e6;
+    }
+    .panel-guide-badge {
+      flex-shrink: 0;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 800;
+    }
+    .badge-pwr { background: #e74c3c; color: #fff; }
+    .badge-knob { background: #34495e; border: 1px solid #7f8c8d; color: #f1c40f; }
+    .badge-bell { background: #e67e22; color: #fff; }
+
+    .score-reference-box {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+    }
+    .score-ref-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd8a8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .score-ref-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: #bbb;
+      padding: 3px 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .score-ref-item.active {
+      background: rgba(255, 184, 52, 0.22);
+      border: 1px solid var(--accent-gold);
+      color: #fff;
+      font-weight: 800;
+    }
+    .score-ref-item .rank-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #ff9f1a, #ff4747);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 11px 28px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 71, 71, 0.4);
+      transition: transform 0.15s;
+      width: 100%;
+    }
+    .btn-start:active { transform: scale(0.96); }
+
+    .fever-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(90deg, #ff4747, #ff9f1a);
+      padding: 6px 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #ff9f1a;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+
+  <!-- ★ 升級為更絲滑、具精緻卡片包裝與動態彈跳的 3 秒開場倒數層 -->
+  <div class="countdown-overlay" id="countdown-overlay">
+    <div class="countdown-card-wrapper">
+      <div class="countdown-number" id="countdown-num">3</div>
+      <div class="countdown-text">🍲 準備開鍋營業...</div>
+    </div>
+  </div>
+
+  <div class="header-bar">
+    <div class="stat-pill">⏱️ <span id="timer-txt">60</span>s</div>
+    <div class="stat-pill">💰 $<span id="score-txt">0</span></div>
+    <div class="stat-pill">🔥 <span id="combo-txt">0</span> Combo</div>
+    <div class="audio-btns">
+      <button class="icon-btn" id="btn-bgm" title="音樂">🎵</button>
+      <button class="icon-btn" id="btn-sfx" title="音效">🔊</button>
+    </div>
+  </div>
+
+  <div class="customers-section" id="customers-list"></div>
+
+  <div class="pot-stage" id="pot-stage">
+    <div id="fever-tag" class="fever-banner">🔥 FEVER TIME! 雙倍得分</div>
+    <div id="tri-banner" class="tri-banner">🎉 三饗大滿貫！+$100</div>
+
+    <!-- 1. 享鮮蒸 -->
+    <div class="steamer-block">
+      <div class="steamer-header">
+        <div class="steamer-title">💨 享鮮蒸 (鮮味蓄熱)</div>
+        <button class="lid-btn" id="lid-toggle-btn">
+          <span id="lid-btn-icon">🔺</span> <span id="lid-btn-txt">開蒸籠蓋</span>
+        </button>
+      </div>
+      <div class="steamer-body" id="steamer-body">
+        <div class="steamer-lid-overlay" id="steamer-lid-overlay">
+          <div class="lid-ribs-bar">
+            <span style="font-size:12px;">🛡️</span>
+            <div class="lid-ribs" id="lid-status-text">【 享鮮蒸密封中・新鮮看的見 】</div>
+          </div>
+          <div class="steam-vent" style="left:20%; top:30%;"></div>
+          <div class="steam-vent" style="right:20%; top:35%;"></div>
+        </div>
+
+        <div class="food-slot empty" data-zone="steam" data-slot="0"></div>
+        <div class="food-slot empty" data-zone="steam" data-slot="1"></div>
+      </div>
+    </div>
+
+    <!-- 2. 下雙爐：左：享燒肉(前鍋) | 右：享涮涮(後鍋) -->
+    <div class="bottom-pots">
+      <div class="pot-card grill-block">
+        <div class="block-tag">
+          <span>🥩 享燒肉(前鍋)</span>
+          <span style="font-size:10px; color:#ffdd99;">滋滋炙烤</span>
+        </div>
+        <div class="slots-grid">
+          <div class="food-slot empty" data-zone="grill" data-slot="0"></div>
+          <div class="food-slot empty" data-zone="grill" data-slot="1"></div>
+        </div>
+      </div>
+
+      <div class="pot-card shabu-block">
+        <div class="block-tag">
+          <span>🍲 享涮涮(後鍋)</span>
+          <span style="font-size:10px; color:#ffd0d0;">滾水快涮</span>
+        </div>
+        <div class="slots-grid">
+          <div class="food-slot empty" data-zone="shabu" data-slot="0"></div>
+          <div class="food-slot empty" data-zone="shabu" data-slot="1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ingredient-deck">
+    <div class="deck-title">
+      <span>點選食材立即下鍋：</span>
+      <span id="hint-action" style="color:var(--accent-gold);">享鮮蒸需先開蓋才能放入！</span>
+    </div>
+    <div class="deck-cards">
+      <div class="ingred-card" data-food="clam">
+        <div class="thumb" id="deck-clam-icon"></div>
+        <div class="name">香薑蛤蜊</div>
+        <span class="tag-type type-steam">享鮮蒸</span>
+      </div>
+      <div class="ingred-card" data-food="squid">
+        <div class="thumb" style="font-size:22px;">🦑</div>
+        <div class="name">澎湖脆卷</div>
+        <span class="tag-type type-steam">享鮮蒸</span>
+      </div>
+      <div class="ingred-card" data-food="beef">
+        <div class="thumb" style="font-size:22px;">🥩</div>
+        <div class="name">牛小排</div>
+        <span class="tag-type type-grill">享燒肉</span>
+      </div>
+      <div class="ingred-card" data-food="egg">
+        <div class="thumb" style="font-size:22px;">🍳</div>
+        <div class="name">蚵仔烘蛋</div>
+        <span class="tag-type type-grill">享燒肉</span>
+      </div>
+      <div class="ingred-card" data-food="pork">
+        <div class="thumb" style="font-size:22px;">🥓</div>
+        <div class="name">松阪豬</div>
+        <span class="tag-type type-shabu">享涮涮</span>
+      </div>
+      <div class="ingred-card" data-food="cabbage">
+        <div class="thumb" style="font-size:22px;">🥬</div>
+        <div class="name">高麗菜</div>
+        <span class="tag-type type-shabu">享涮涮</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 頁面 1：開始選單 Modal -->
+  <div class="modal-backdrop" id="modal-start">
+    <div class="modal-card">
+      <h2 class="modal-title">一鍋三饗・火候大廚</h2>
+      
+      <div class="tri-icons-row">
+        <div class="tri-icon-bubble bounce-icon-1">
+          <span class="icon">🥩</span>
+          <span class="label">享燒肉</span>
+        </div>
+        <div class="tri-icon-bubble bounce-icon-2">
+          <span class="icon">🍲</span>
+          <span class="label">享涮涮</span>
+        </div>
+        <div class="tri-icon-bubble bounce-icon-3">
+          <span class="icon">💨</span>
+          <span class="label">享鮮蒸</span>
+        </div>
+      </div>
+
+      <div class="features-list">
+        <div class="feature-item">
+          <span>🥩</span>
+          <div><strong>享燒肉(前鍋)</strong>：炙燒焦香鎖汁，牛小排與蚵仔烘蛋黃金翻面。</div>
+        </div>
+        <div class="feature-item">
+          <span>🍲</span>
+          <div><strong>享涮涮(後鍋)</strong>：高溫高湯急涮，松阪豬與高麗菜鮮嫩脆甜。</div>
+        </div>
+        <div class="feature-item">
+          <span>💨</span>
+          <div><strong>享鮮蒸</strong>：開蓋放入、蓋蓋透視鎖鮮，香薑蛤蜊與脆卷汁水淋漓。</div>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btn-to-instructions">開始營業・挑戰神廚</button>
+    </div>
+  </div>
+
+  <!-- 頁面 2：中插控制面板說明頁面 -->
+  <div class="modal-backdrop" id="modal-instructions" style="display:none;">
+    <div class="modal-card">
+      <h2 class="modal-title" style="font-size:19px;">一鍋三饗・操作指引</h2>
+
+      <div class="panel-guide-box">
+        <div class="panel-guide-header">
+          <span>🎛️</span>
+          <span>爐具控制面板操作說明</span>
+        </div>
+        <div class="panel-guide-item">
+          <span class="panel-guide-badge badge-pwr">電源</span>
+          <div>控制面板中間為<strong>紅色電源按鈕</strong>。</div>
+        </div>
+        <div class="panel-guide-item">
+          <span class="panel-guide-badge badge-knob">旋鈕</span>
+          <div><strong>右邊旋鈕控制火鍋</strong>，<strong>左邊旋鈕控制烤盤</strong>。轉到 <strong>6</strong> 是最大火力。</div>
+        </div>
+        <div class="panel-guide-item">
+          <span class="panel-guide-badge badge-bell">服務</span>
+          <div>如烹飪中有需要服務請按下<strong>服務鈴</strong>。</div>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btn-confirm-start">確認</button>
+    </div>
+  </div>
+
+  <!-- 頁面 3：結束選單 Modal -->
+  <div class="modal-backdrop" id="modal-gameover" style="display:none;">
+    <div class="modal-card">
+      <h2 class="modal-title">營業結算</h2>
+      <div style="font-size: 36px; margin:2px 0;" id="end-rank-icon">👑</div>
+      <h3 style="margin: 0; color:var(--accent-gold); font-size:17px;" id="end-rank-title">三饗特級天才廚神</h3>
+      
+      <div style="font-size:13px; color:#eee; text-align:left; width:100%; padding:2px 6px; line-height:1.6;">
+        <div>總營業額：<strong style="color:var(--accent-gold); font-size:18px;">$<span id="end-score">0</span></strong></div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>完美出餐：<strong id="end-perfect">0</strong> 份</span>
+          <span>最高連擊：<strong id="end-max-combo">0</strong> Combo</span>
+        </div>
+      </div>
+
+      <div class="score-reference-box">
+        <div class="score-ref-title">📊 廚神階級評級標準：</div>
+        <div class="score-ref-item" id="ref-tier-genius">
+          <div class="rank-badge"><span>⚡</span><span>三饗特級天才廚神</span></div>
+          <span>$3,000 以上</span>
+        </div>
+        <div class="score-ref-item" id="ref-tier-michelin">
+          <div class="rank-badge"><span>👑</span><span>米其林派來微服出巡的</span></div>
+          <span>$2,000 ~ $2,999</span>
+        </div>
+        <div class="score-ref-item" id="ref-tier-master">
+          <div class="rank-badge"><span>🏆</span><span>巷仔內料理總舖師</span></div>
+          <span>$1,300 ~ $1,999</span>
+        </div>
+        <div class="score-ref-item" id="ref-tier-safe">
+          <div class="rank-badge"><span>⭐</span><span>至少今天沒有把廚房炸掉</span></div>
+          <span>$700 ~ $1,299</span>
+        </div>
+        <div class="score-ref-item" id="ref-tier-foodie">
+          <div class="rank-badge"><span>🍳</span><span>等待被餵食的吃貨</span></div>
+          <span>$699 以下</span>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btn-game-replay">再次挑戰</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* --- 1. SVG 向量圖像庫 --- */
+const SVG_ICONS = {
+  clamRaw: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="34" rx="26" ry="20" fill="#9e8574" stroke="#4a372c" stroke-width="2.5"/>
+      <path d="M12 34 Q32 20 52 34" stroke="#33241b" stroke-width="1.8" fill="none"/>
+      <path d="M16 38 Q32 26 48 38" stroke="#33241b" stroke-width="1.5" fill="none"/>
+      <path d="M22 42 Q32 32 42 42" stroke="#33241b" stroke-width="1.2" fill="none"/>
+    </svg>`,
+  clamCooked: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 38 C6 20 28 8 32 18 C36 8 58 20 56 38 C54 50 38 52 32 50 C26 52 10 50 8 38Z" fill="#bfa58f" stroke="#523d30" stroke-width="2.5"/>
+      <path d="M12 36 C18 16 30 16 32 24" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <ellipse cx="32" cy="34" rx="15" ry="11" fill="#ffb85c" stroke="#d35400" stroke-width="2"/>
+      <ellipse cx="32" cy="35" rx="8" ry="5" fill="#ffe099"/>
+      <line x1="26" y1="29" x2="38" y2="35" stroke="#f1c40f" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="36" y1="28" x2="28" y2="38" stroke="#27ae60" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="24" y1="34" x2="35" y2="39" stroke="#f39c12" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+  clamBurnt: `
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="34" rx="24" ry="18" fill="#3a302a" stroke="#1c1613" stroke-width="2.5"/>
+      <ellipse cx="32" cy="34" rx="9" ry="6" fill="#1f1814"/>
+    </svg>`
+};
+
+document.getElementById('deck-clam-icon').innerHTML = SVG_ICONS.clamCooked;
+
+/* --- 2. 食材資料定義 --- */
+const INGREDIENTS = {
+  clam: { id: 'clam', name: '香薑蛤蜊', zone: 'steam', time: 5.0, price: 90, emoji: '🦪', type: 'steam' },
+  squid: { id: 'squid', name: '澎湖脆卷', zone: 'steam', time: 4.6, price: 85, emoji: '🦑', type: 'steam' },
+  pork: { id: 'pork', name: '松阪豬', zone: 'shabu', time: 3.4, price: 95, emoji: '🥓', type: 'shabu' },
+  cabbage: { id: 'cabbage', name: '高麗菜', zone: 'shabu', time: 3.6, price: 50, emoji: '🥬', type: 'shabu' },
+  beef: { id: 'beef', name: '牛小排', zone: 'grill', time: 4.6, price: 100, emoji: '🥩', type: 'grill', needFlip: true },
+  egg: { id: 'egg', name: '蚵仔烘蛋', zone: 'grill', time: 4.4, price: 80, emoji: '🍳', type: 'grill', needFlip: true }
+};
+
+/* --- 3. 組合餐點庫定義 --- */
+const COMBO_SETS = [
+  { name: '海味極鮮雙饗', items: ['clam', 'squid'] },
+  { name: '頂級海陸盛宴', items: ['beef', 'clam'] },
+  { name: '山海炙燒特餐', items: ['beef', 'squid'] },
+  { name: '清甜老饕雙拼', items: ['pork', 'cabbage'] },
+  { name: '鐵板極致雙品', items: ['beef', 'egg'] },
+  { name: '海陸烘烤套餐', items: ['egg', 'pork'] },
+  { name: '蒸烤鮮甜特選', items: ['clam', 'beef'] },
+  { name: '三饗招牌全席', items: ['clam', 'pork', 'beef'] },
+  { name: '健康鮮蔬雙享', items: ['cabbage', 'squid'] }
+];
+
+/* --- 4. Web Audio 音效與音樂引擎 --- */
+class SoundMaster {
+  constructor() {
+    this.ctx = null;
+    this.bgmEnabled = true;
+    this.sfxEnabled = true;
+    this.bgmTimer = null;
+    this.bgmStep = 0;
+    this.isUrgent = false;
+
+    this.softMelody = [
+      523.25, 0, 587.33, 659.25, 0, 783.99, 659.25, 0,
+      523.25, 587.33, 659.25, 523.25, 440.00, 0, 392.00, 0,
+      440.00, 0, 523.25, 659.25, 0, 587.33, 523.25, 0,
+      440.00, 493.88, 523.25, 587.33, 659.25, 0, 0, 0,
+
+      659.25, 0, 783.99, 880.00, 0, 783.99, 659.25, 0,
+      587.33, 659.25, 587.33, 523.25, 440.00, 0, 523.25, 0,
+      659.25, 783.99, 880.00, 0, 783.99, 659.25, 587.33, 0,
+      523.25, 0, 587.33, 0, 659.25, 0, 0, 0,
+
+      783.99, 0, 880.00, 987.77, 0, 880.00, 783.99, 0,
+      659.25, 783.99, 659.25, 587.33, 523.25, 0, 440.00, 0,
+      523.25, 0, 659.25, 783.99, 0, 880.00, 783.99, 0,
+      659.25, 587.33, 523.25, 440.00, 523.25, 0, 0, 0,
+
+      587.33, 0, 659.25, 783.99, 0, 659.25, 587.33, 0,
+      523.25, 440.00, 523.25, 587.33, 659.25, 0, 587.33, 0,
+      523.25, 0, 440.00, 392.00, 440.00, 0, 523.25, 0,
+      587.33, 0, 493.88, 0, 523.25, 0, 0, 0
+    ];
+
+    this.softBass = [
+      261.63, 261.63, 329.63, 329.63, 220.00, 220.00, 196.00, 196.00,
+      220.00, 220.00, 261.63, 261.63, 293.66, 293.66, 329.63, 329.63,
+      329.63, 329.63, 392.00, 392.00, 293.66, 293.66, 220.00, 220.00,
+      261.63, 261.63, 293.66, 293.66, 329.63, 329.63, 261.63, 261.63
+    ];
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playCountdownTick() {
+    if (!this.sfxEnabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, t);
+    osc.frequency.exponentialRampToValueAtTime(330, t + 0.25);
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  }
+
+  playCountdownGo() {
+    if (!this.sfxEnabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(523.25, t);
+    osc.frequency.setValueAtTime(783.99, t + 0.1);
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.5);
+  }
+
+  playCheer() {
+    if (!this.sfxEnabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    
+    const bufSize = Math.floor(this.ctx.sampleRate * 2.2);
+    const buffer = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 1.5));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1200, t);
+    filter.frequency.linearRampToValueAtTime(1600, t + 1.0);
+    filter.Q.value = 1.2;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, t);
+    gain.gain.linearRampToValueAtTime(0.38, t + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 2.1);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start(t);
+
+    const chord = [523.25, 659.25, 783.99, 1046.50];
+    chord.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+      oscGain.gain.setValueAtTime(0.01, t + idx * 0.08);
+      oscGain.gain.linearRampToValueAtTime(0.18, t + idx * 0.08 + 0.05);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 1.2);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.ctx.destination);
+      osc.start(t + idx * 0.08);
+      osc.stop(t + idx * 0.08 + 1.25);
+    });
+  }
+
+  playSfx(type) {
+    if (!this.sfxEnabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    if (type === 'drop') {
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.12);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } else if (type === 'flip') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(450, t);
+      osc.frequency.exponentialRampToValueAtTime(680, t + 0.15);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    } else if (type === 'steam') {
+      const bufSize = this.ctx.sampleRate * 0.25;
+      const buffer = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1800;
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      noise.start(t);
+    } else if (type === 'serve') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587, t);
+      osc.frequency.setValueAtTime(880, t + 0.08);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    } else if (type === 'burnt' || type === 'warn') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.linearRampToValueAtTime(90, t + 0.25);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t);
+      osc.stop(t + 0.25);
+    } else if (type === 'tick') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    } else if (type === 'tri') {
+      [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, t + idx * 0.06);
+        g.gain.setValueAtTime(0.18, t + idx * 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.6);
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        o.start(t + idx * 0.06);
+        o.stop(t + idx * 0.06 + 0.65);
+      });
+    }
+  }
+
+  setUrgentMode(urgent) {
+    if (this.isUrgent === urgent) return;
+    this.isUrgent = urgent;
+    this.stopBGM();
+    if (this.bgmEnabled) this.startBGM();
+  }
+
+  startBGM() {
+    if (!this.bgmEnabled || this.bgmTimer) return;
+    this.init();
+    
+    const urgentMelody = [784, 880, 740, 830, 784, 932, 880, 987];
+    const urgentBass = [130, 130, 110, 110];
+
+    const intervalTime = this.isUrgent ? 120 : 370;
+
+    this.bgmTimer = setInterval(() => {
+      if (!this.bgmEnabled || !this.ctx) return;
+      const t = this.ctx.currentTime;
+      
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      
+      if (this.isUrgent) {
+        osc.type = 'triangle';
+        const freq = urgentMelody[this.bgmStep % urgentMelody.length];
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.13, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.11);
+      } else {
+        const noteIdx = this.bgmStep;
+        const freq = (noteIdx < this.softMelody.length) ? this.softMelody[noteIdx] : 0;
+        
+        if (freq > 0) {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(0.065, t + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.36);
+        }
+      }
+
+      if (this.bgmStep % 2 === 0) {
+        const bOsc = this.ctx.createOscillator();
+        const bGain = this.ctx.createGain();
+        
+        if (this.isUrgent) {
+          bOsc.type = 'sawtooth';
+          const bFreq = urgentBass[(this.bgmStep / 2) % urgentBass.length];
+          bOsc.frequency.setValueAtTime(bFreq, t);
+          bGain.gain.setValueAtTime(0.22, t);
+          bGain.linearRampToValueAtTime(0.01, t + 0.12);
+          bOsc.connect(bGain);
+          bGain.connect(this.ctx.destination);
+          bOsc.start(t);
+          bOsc.stop(t + 0.14);
+        } else {
+          bOsc.type = 'triangle';
+          const bFreq = this.softBass[(this.bgmStep / 2) % this.softBass.length] || 261.63;
+          bOsc.frequency.setValueAtTime(bFreq, t);
+          bGain.gain.setValueAtTime(0.001, t);
+          bGain.gain.linearRampToValueAtTime(0.045, t + 0.05);
+          bGain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+          bOsc.connect(bGain);
+          bGain.connect(this.ctx.destination);
+          bOsc.start(t);
+          bOsc.stop(t + 0.58);
+        }
+      }
+
+      this.bgmStep++;
+    }, intervalTime);
+  }
+
+  stopBGM() {
+    if (this.bgmTimer) {
+      clearInterval(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  }
+}
+
+/* --- 5. 遊戲主控制器 --- */
+class PotGame {
+  constructor() {
+    this.sound = new SoundMaster();
+    this.score = 0;
+    this.timeLeft = 60;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.perfectCount = 0;
+    this.isPlaying = false;
+    this.isLidClosed = false;
+
+    this.slots = {
+      steam: [null, null],
+      shabu: [null, null],
+      grill: [null, null]
+    };
+
+    this.customerCounter = 0;
+    this.customers = [];
+
+    this.customerCooldown = 0;
+    this.pendingReplenish = 0;
+    this.lastServedZones = { steam: 0, shabu: 0, grill: 0 };
+
+    this.gameTicker = null;
+    this.bindDom();
+  }
+
+  bindDom() {
+    const lidBtn = document.getElementById('lid-toggle-btn');
+    lidBtn.addEventListener('click', () => this.toggleLid());
+
+    document.getElementById('steamer-lid-overlay').addEventListener('click', () => this.toggleLid());
+
+    document.getElementById('btn-bgm').addEventListener('click', (e) => {
+      this.sound.bgmEnabled = !this.sound.bgmEnabled;
+      e.target.textContent = this.sound.bgmEnabled ? '🎵' : '🔇';
+      if (this.sound.bgmEnabled && this.isPlaying) this.sound.startBGM();
+      else this.sound.stopBGM();
+    });
+
+    document.getElementById('btn-sfx').addEventListener('click', (e) => {
+      this.sound.sfxEnabled = !this.sound.sfxEnabled;
+      e.target.textContent = this.sound.sfxEnabled ? '🔊' : '🔈';
+    });
+
+    document.getElementById('btn-to-instructions').addEventListener('click', () => {
+      this.sound.init();
+      document.getElementById('modal-start').style.display = 'none';
+      document.getElementById('modal-instructions').style.display = 'flex';
+    });
+
+    document.getElementById('btn-confirm-start').addEventListener('click', () => {
+      this.sound.init();
+      document.getElementById('modal-instructions').style.display = 'none';
+      this.startCountdownSequence();
+    });
+
+    document.getElementById('btn-game-replay').addEventListener('click', () => {
+      document.getElementById('modal-gameover').style.display = 'none';
+      this.startCountdownSequence();
+    });
+
+    document.querySelectorAll('.ingred-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const foodId = card.dataset.food;
+        this.deployFood(foodId);
+      });
+    });
+
+    document.querySelectorAll('.food-slot').forEach(el => {
+      const handleSlotInteraction = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const zone = el.dataset.zone;
+        const slotIdx = parseInt(el.dataset.slot);
+        this.interactSlot(zone, slotIdx);
+      };
+
+      el.addEventListener('pointerdown', handleSlotInteraction);
+    });
+  }
+
+  startCountdownSequence() {
+    const overlay = document.getElementById('countdown-overlay');
+    const numEl = document.getElementById('countdown-num');
+    overlay.classList.add('active');
+
+    let count = 3;
+    numEl.textContent = count;
+    this.sound.playCountdownTick();
+
+    const countInterval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        numEl.textContent = count;
+        this.sound.playCountdownTick();
+      } else if (count === 0) {
+        numEl.textContent = 'GO!';
+        this.sound.playCountdownGo();
+      } else {
+        clearInterval(countInterval);
+        overlay.classList.remove('active');
+        this.startGame();
+      }
+    }, 900);
+  }
+
+  toggleLid() {
+    this.isLidClosed = !this.isLidClosed;
+    const overlay = document.getElementById('steamer-lid-overlay');
+    const lidBtn = document.getElementById('lid-toggle-btn');
+    const lidIcon = document.getElementById('lid-btn-icon');
+    const lidTxt = document.getElementById('lid-btn-txt');
+    const hintAction = document.getElementById('hint-action');
+
+    if (this.isLidClosed) {
+      overlay.classList.remove('open');
+      lidBtn.classList.remove('opened');
+      lidIcon.textContent = '🔺';
+      lidTxt.textContent = '開蒸籠蓋';
+      hintAction.textContent = '享鮮蒸蓄熱中 (透視食材熟成進度)';
+      this.sound.playSfx('drop');
+    } else {
+      overlay.classList.add('open');
+      lidBtn.classList.add('opened');
+      lidIcon.textContent = '🔻';
+      lidTxt.textContent = '蓋蒸籠蓋';
+      hintAction.textContent = '享鮮蒸已開蓋：可放入食材或採收';
+      this.sound.playSfx('steam');
+      this.spawnSteamPuffs();
+    }
+    this.renderAllSlots();
+  }
+
+  spawnSteamPuffs() {
+    const steamer = document.getElementById('steamer-body');
+    const rect = steamer.getBoundingClientRect();
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'steam-particle';
+      const size = 20 + Math.random() * 26;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = (Math.random() * (rect.width - 40) + 20) + 'px';
+      p.style.top = '25px';
+      p.style.setProperty('--dx', (Math.random() * 50 - 25) + 'px');
+      steamer.appendChild(p);
+      setTimeout(() => p.remove(), 950);
+    }
+  }
+
+  startGame() {
+    this.score = 0;
+    this.timeLeft = 60;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.perfectCount = 0;
+    this.isPlaying = true;
+    this.isLidClosed = false;
+    this.pendingReplenish = 0;
+    this.lastServedZones = { steam: 0, shabu: 0, grill: 0 };
+
+    this.sound.setUrgentMode(false);
+    this.sound.bgmStep = 0;
+    const container = document.getElementById('game-container');
+    container.classList.remove('panic-flash');
+    const timerTxt = document.getElementById('timer-txt');
+    timerTxt.classList.remove('timer-alert');
+
+    document.getElementById('steamer-lid-overlay').classList.add('open');
+    document.getElementById('steamer-lid-overlay').classList.remove('has-ready');
+    document.getElementById('lid-toggle-btn').classList.add('opened');
+    document.getElementById('lid-btn-icon').textContent = '🔻';
+    document.getElementById('lid-btn-txt').textContent = '蓋蒸籠蓋';
+    document.getElementById('hint-action').textContent = '享鮮蒸已開蓋：請放入食材後蓋蓋';
+
+    for (let z in this.slots) {
+      this.slots[z] = [null, null];
+    }
+    
+    document.getElementById('customers-list').innerHTML = '';
+    this.customers = [];
+
+    this.updateStatsUi();
+    this.renderAllSlots();
+
+    this.spawnCustomer();
+    this.customerCooldown = 2.0;
+
+    this.sound.startBGM();
+
+    if (this.gameTicker) clearInterval(this.gameTicker);
+    this.gameTicker = setInterval(() => this.tick(), 100);
+  }
+
+  deployFood(foodId) {
+    if (!this.isPlaying) return;
+    const foodDef = INGREDIENTS[foodId];
+    const targetZone = foodDef.zone;
+
+    if (targetZone === 'steam' && this.isLidClosed) {
+      const steamerEl = document.querySelector('.steamer-block');
+      const rect = steamerEl.getBoundingClientRect();
+      this.showFloatScore('⚠️ 請先開蒸籠蓋！', rect.left + rect.width / 2 - 50, rect.top + 20, true);
+      this.sound.playSfx('warn');
+      this.vibrate([60, 40, 60]);
+      return;
+    }
+
+    const slotArr = this.slots[targetZone];
+    const freeIdx = slotArr.findIndex(item => item === null);
+    if (freeIdx === -1) {
+      this.vibrate(50);
+      return;
+    }
+
+    slotArr[freeIdx] = {
+      ...foodDef,
+      elapsed: 0,
+      flipped: false,
+      state: 'raw'
+    };
+
+    this.sound.playSfx('drop');
+    this.vibrate(30);
+    this.renderSlot(targetZone, freeIdx);
+  }
+
+  interactSlot(zone, slotIdx) {
+    if (!this.isPlaying) return;
+    const item = this.slots[zone][slotIdx];
+    if (!item) return;
+
+    if (zone === 'steam' && this.isLidClosed) {
+      this.toggleLid();
+      return;
+    }
+
+    if (item.needFlip && !item.flipped) {
+      if (item.state === 'flip') {
+        item.flipped = true;
+        item.state = 'cooking';
+        item.elapsed = item.time * 0.5;
+        this.sound.playSfx('flip');
+        this.vibrate(40);
+        this.renderSlot(zone, slotIdx);
+        return;
+      }
+    }
+
+    if (item.state === 'perfect') {
+      this.serveItem(item, zone, slotIdx, true);
+    } else if (item.state === 'burnt') {
+      this.slots[zone][slotIdx] = null;
+      this.sound.playSfx('burnt');
+      this.vibrate(100);
+      this.renderSlot(zone, slotIdx);
+    } else {
+      this.slots[zone][slotIdx] = null;
+      this.sound.playSfx('burnt');
+      this.vibrate(60);
+      this.renderSlot(zone, slotIdx);
+    }
+  }
+
+  spawnFlyingDish(item, startRect, targetRect) {
+    const dish = document.createElement('div');
+    dish.className = 'flying-dish';
+    dish.textContent = item.id === 'beef' ? '🌯' : (item.id === 'squid' ? '🦑' : (item.emoji || '🍽️'));
+    dish.style.left = `${startRect.left + 10}px`;
+    dish.style.top = `${startRect.top + 5}px`;
+    document.body.appendChild(dish);
+
+    requestAnimationFrame(() => {
+      const dx = (targetRect.left + targetRect.width / 2) - (startRect.left + 20);
+      const dy = (targetRect.top + targetRect.height / 2) - (startRect.top + 20);
+      dish.style.transform = `translate(${dx}px, ${dy}px) scale(0.65) rotate(15deg)`;
+      dish.style.opacity = '0.4';
+    });
+
+    setTimeout(() => dish.remove(), 420);
+  }
+
+  serveItem(item, zone, slotIdx, isPerfect) {
+    let matched = false;
+    let matchedCust = null;
+    let orderIndex = -1;
+
+    for (let cust of this.customers) {
+      const idx = cust.orders.findIndex(ord => ord.id === item.id && !ord.served);
+      if (idx !== -1) {
+        cust.orders[idx].served = true;
+        matched = true;
+        matchedCust = cust;
+        orderIndex = idx;
+        break;
+      }
+    }
+
+    const slotEl = document.querySelector(`.food-slot[data-zone="${zone}"][data-slot="${slotIdx}"]`);
+    const rect = slotEl.getBoundingClientRect();
+
+    if (matched) {
+      let earned = item.price;
+      this.combo++;
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      this.perfectCount++;
+
+      if (matchedCust && matchedCust.isVip) {
+        earned = Math.floor(earned * 1.5);
+      }
+
+      if (this.feverTime > 0) earned *= 2;
+      earned += (this.combo * 5);
+      this.score += earned;
+
+      this.sound.playSfx('serve');
+      this.vibrate([40, 30, 40]);
+      
+      const tipTxt = (matchedCust && matchedCust.isVip) ? `VIP雙倍! +$${earned}` : `+$${earned}! Combo ${this.combo}`;
+      this.showFloatScore(tipTxt, rect.left + 20, rect.top);
+
+      if (matchedCust) {
+        const custEl = document.getElementById(`cust-${matchedCust.id}`);
+        if (custEl) {
+          const tags = custEl.querySelectorAll('.order-tag');
+          if (tags[orderIndex]) {
+            this.spawnFlyingDish(item, rect, tags[orderIndex].getBoundingClientRect());
+            setTimeout(() => {
+              tags[orderIndex].classList.add('done');
+            }, 380);
+          }
+        }
+      }
+
+      const now = Date.now();
+      this.lastServedZones[zone] = now;
+      const isTriActive = (now - this.lastServedZones.steam < 4500) &&
+                          (now - this.lastServedZones.shabu < 4500) &&
+                          (now - this.lastServedZones.grill < 4500);
+
+      if (isTriActive) {
+        this.triggerTriBanner();
+      }
+
+      if (this.combo >= 3 && this.feverTime <= 0) {
+        this.triggerFever();
+      }
+    } else {
+      const fallback = Math.floor(item.price * 0.5);
+      this.score += fallback;
+      this.combo = 0;
+      this.sound.playSfx('serve');
+      this.showFloatScore(`+$${fallback}`, rect.left + 20, rect.top);
+    }
+
+    this.slots[zone][slotIdx] = null;
+    this.renderSlot(zone, slotIdx);
+    this.updateStatsUi();
+    this.checkCustomerCompleted();
+  }
+
+  triggerTriBanner() {
+    this.score += 100;
+    this.sound.playSfx('tri');
+    this.vibrate([100, 60, 100]);
+    this.lastServedZones = { steam: 0, shabu: 0, grill: 0 };
+
+    const banner = document.getElementById('tri-banner');
+    banner.classList.add('show');
+    setTimeout(() => banner.classList.remove('show'), 1600);
+  }
+
+  triggerFever() {
+    this.feverTime = 10;
+    const banner = document.getElementById('fever-tag');
+    banner.style.opacity = '1';
+    document.getElementById('pot-stage').classList.add('fever-glow');
+    this.vibrate([80, 50, 80]);
+  }
+
+  tick() {
+    this.timeLeft -= 0.1;
+    if (this.timeLeft <= 0) {
+      this.timeLeft = 0;
+      this.endGame();
+      return;
+    }
+
+    if (this.customerCooldown > 0) {
+      this.customerCooldown -= 0.1;
+    }
+
+    if (this.timeLeft <= 10.0 && !this.sound.isUrgent) {
+      this.sound.setUrgentMode(true);
+    }
+
+    const container = document.getElementById('game-container');
+    const timerTxt = document.getElementById('timer-txt');
+    if (this.timeLeft <= 5.0) {
+      if (!container.classList.contains('panic-flash')) {
+        container.classList.add('panic-flash');
+        timerTxt.classList.add('timer-alert');
+      }
+      if (Math.floor(this.timeLeft * 10) % 10 === 0) {
+        this.sound.playSfx('tick');
+      }
+    }
+
+    if (this.feverTime > 0) {
+      this.feverTime -= 0.1;
+      if (this.feverTime <= 0) {
+        document.getElementById('fever-tag').style.opacity = '0';
+        document.getElementById('pot-stage').classList.remove('fever-glow');
+      }
+    }
+
+    let hasSteamReady = false;
+
+    for (let zone in this.slots) {
+      for (let i = 0; i < this.slots[zone].length; i++) {
+        const item = this.slots[zone][i];
+        if (!item) continue;
+
+        let speedMult = 1.0;
+        if (zone === 'steam') {
+          speedMult = this.isLidClosed ? 1.0 : 0.0;
+        }
+
+        if (this.feverTime > 0 && speedMult > 0) speedMult *= 1.25;
+
+        item.elapsed += 0.1 * speedMult;
+        this.updateItemState(item, zone);
+        this.renderSlot(zone, i);
+
+        if (zone === 'steam' && (item.state === 'perfect' || (item.id === 'squid' && item.state === 'perfect'))) {
+          hasSteamReady = true;
+        }
+      }
+    }
+
+    const lidOverlay = document.getElementById('steamer-lid-overlay');
+    const lidStatusText = document.getElementById('lid-status-text');
+    if (hasSteamReady) {
+      lidOverlay.classList.add('has-ready');
+      lidStatusText.textContent = '✨ 食材已熟成・點擊開蓋採收！';
+    } else {
+      lidOverlay.classList.remove('has-ready');
+      lidStatusText.textContent = '【 享鮮蒸密封中・新鮮看的見 】';
+    }
+
+    for (let i = this.customers.length - 1; i >= 0; i--) {
+      const c = this.customers[i];
+      c.patience -= 0.1;
+      if (c.patience <= 0) {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) el.remove();
+        this.customers.splice(i, 1);
+        this.combo = 0;
+        this.updateStatsUi();
+        this.vibrate(150);
+
+        this.pendingReplenish++;
+      } else {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) {
+          const fill = el.querySelector('.patience-fill');
+          const patPct = Math.max(0, (c.patience / c.maxPatience) * 100);
+          fill.style.width = patPct + '%';
+          if (patPct < 30) fill.style.backgroundColor = 'var(--accent-red)';
+          else if (patPct < 60) fill.style.backgroundColor = 'var(--accent-gold)';
+          else fill.style.backgroundColor = 'var(--accent-green)';
+        }
+      }
+    }
+
+    while (this.customers.length < 2) {
+      this.spawnCustomer();
+      this.customerCooldown = 2.0;
+      if (this.pendingReplenish > 0) this.pendingReplenish--;
+    }
+
+    if (this.customerCooldown <= 0 && this.customers.length < 3) {
+      if (this.pendingReplenish > 0 || Math.random() < 0.08) {
+        this.spawnCustomer();
+        this.customerCooldown = 2.0;
+        if (this.pendingReplenish > 0) this.pendingReplenish--;
+      }
+    }
+
+    timerTxt.textContent = Math.ceil(this.timeLeft);
+  }
+
+  updateItemState(item, zone) {
+    const target = item.time;
+    if (item.needFlip && !item.flipped) {
+      const halfTime = target * 0.5;
+      if (item.elapsed >= halfTime && item.elapsed < halfTime + 2.0) {
+        item.state = 'flip';
+      } else if (item.elapsed >= halfTime + 2.0) {
+        item.state = 'burnt';
+      } else {
+        item.state = 'cooking';
+      }
+      return;
+    }
+
+    if (item.elapsed < target) {
+      item.state = 'cooking';
+    } else if (item.elapsed >= target && item.elapsed <= target + 3.2) {
+      item.state = 'perfect';
+    } else {
+      item.state = 'burnt';
+    }
+  }
+
+  spawnCustomer() {
+    if (this.customers.length >= 3) return;
+
+    const isVip = Math.random() < 0.22;
+    const avatars = isVip ? ['👑', '🎩', '💎'] : ['👨‍💼', '👩‍🦰', '👴', '👧', '🧑‍🍳', '🧔'];
+    const combo = COMBO_SETS[Math.floor(Math.random() * COMBO_SETS.length)];
+    const orders = combo.items.map(foodKey => ({
+      id: foodKey,
+      served: false
+    }));
+
+    const custId = ++this.customerCounter;
+    const newCust = {
+      id: custId,
+      isVip: isVip,
+      comboName: isVip ? `⭐ VIP ${combo.name}` : combo.name,
+      avatar: avatars[Math.floor(Math.random() * avatars.length)],
+      patience: isVip ? 18 : 25,
+      maxPatience: isVip ? 18 : 25,
+      orders: orders
+    };
+    this.customers.push(newCust);
+
+    const list = document.getElementById('customers-list');
+    const card = document.createElement('div');
+    card.className = `customer-card ${isVip ? 'vip' : ''}`;
+    card.id = `cust-${custId}`;
+
+    let ordersHtml = '';
+    newCust.orders.forEach(o => {
+      const f = INGREDIENTS[o.id];
+      let iconView = f.emoji || '🦪';
+      ordersHtml += `
+        <div class="order-tag ${o.served ? 'done' : ''}">
+          <span style="font-size:12px;">${iconView}</span>
+          <span class="order-tag-name">${f.name}</span>
+        </div>
+      `;
+    });
+
+    const vipBadge = isVip ? `<div class="vip-tag">VIP 貴賓</div>` : '';
+
+    card.innerHTML = `
+      ${vipBadge}
+      <div class="cust-top">
+        <span class="cust-avatar">${newCust.avatar}</span>
+        <div class="cust-combo-name" title="${newCust.comboName}">🍱 ${newCust.comboName}</div>
+      </div>
+      <div class="cust-patience-bar">
+        <div class="patience-fill" style="width:100%; background:var(--accent-green);"></div>
+      </div>
+      <div class="cust-order">${ordersHtml}</div>
+    `;
+    list.appendChild(card);
+  }
+
+  checkCustomerCompleted() {
+    for (let i = this.customers.length - 1; i >= 0; i--) {
+      const c = this.customers[i];
+      const allDone = c.orders.every(o => o.served);
+      if (allDone) {
+        const el = document.getElementById(`cust-${c.id}`);
+        if (el) el.remove();
+        this.customers.splice(i, 1);
+        
+        const finishBonus = c.isVip ? 60 : 35;
+        this.score += finishBonus;
+        this.showFloatScore(`${c.comboName} 完成! +$${finishBonus}`, window.innerWidth / 2, 80);
+
+        this.pendingReplenish++;
+      }
+    }
+
+    while (this.customers.length < 2) {
+      this.spawnCustomer();
+      this.customerCooldown = 2.0;
+      if (this.pendingReplenish > 0) this.pendingReplenish--;
+    }
+  }
+
+  renderSlot(zone, idx) {
+    const el = document.querySelector(`.food-slot[data-zone="${zone}"][data-slot="${idx}"]`);
+    const item = this.slots[zone][idx];
+    if (!item) {
+      el.className = 'food-slot empty';
+      el.innerHTML = '';
+      return;
+    }
+
+    el.className = 'food-slot';
+
+    let visualHtml = '';
+    if (item.id === 'clam') {
+      if (item.state === 'burnt') visualHtml = SVG_ICONS.clamBurnt;
+      else if (item.state === 'perfect') visualHtml = SVG_ICONS.clamCooked;
+      else visualHtml = SVG_ICONS.clamRaw;
+    } else if (item.id === 'beef') {
+      visualHtml = item.state === 'perfect' ? `<span class="food-emoji">🌯</span>` : `<span class="food-emoji">🥩</span>`;
+    } else if (item.id === 'egg') {
+      visualHtml = item.flipped ? `<span class="food-emoji">🍳</span>` : `<span class="food-emoji">🦪</span>`;
+    } else {
+      visualHtml = `<span class="food-emoji">${item.emoji}</span>`;
+    }
+
+    let badgeClass = 'state-cooking';
+    let badgeText = '烹調中';
+
+    if (zone === 'steam') {
+      if (!this.isLidClosed) {
+        badgeClass = 'state-stop';
+        badgeText = '⚠️需蓋蓋';
+      } else {
+        badgeText = '蒸氣鎖鮮';
+      }
+    } else if (zone === 'shabu') {
+      badgeText = '滾水快涮';
+    } else if (zone === 'grill') {
+      if (item.id === 'egg') {
+        badgeText = item.flipped ? '金黃微焦' : '香煎生蚵';
+      } else {
+        badgeText = item.flipped ? '金黃微焦' : '滋滋炙烤';
+      }
+    }
+
+    if (item.state === 'flip') {
+      badgeClass = 'state-flip';
+      badgeText = item.id === 'egg' ? '加入蛋液，蓋上鍋蓋' : '快翻面！';
+    } else if (item.state === 'perfect') {
+      badgeClass = 'state-perfect';
+      if (item.id === 'beef') {
+        badgeText = '捲起剝皮辣椒';
+      } else if (item.id === 'squid') {
+        badgeText = '沾取海鮮醬';
+      } else {
+        badgeText = '完美熟成！';
+      }
+    } else if (item.state === 'burnt') {
+      badgeClass = 'state-burnt';
+      badgeText = '已焦黑';
+    }
+
+    const pct = Math.min(100, Math.round((item.elapsed / item.time) * 100));
+
+    el.innerHTML = `
+      <div class="cooking-item">
+        <div class="food-visual">${visualHtml}</div>
+        <div class="food-meta">
+          <div class="food-name">${item.name}</div>
+          <div class="state-badge ${badgeClass}">${badgeText}</div>
+          <div class="cook-progress"><div class="cook-fill" style="width:${pct}%;"></div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderAllSlots() {
+    for (let zone in this.slots) {
+      for (let i = 0; i < this.slots[zone].length; i++) {
+        this.renderSlot(zone, i);
+      }
+    }
+  }
+
+  updateStatsUi() {
+    document.getElementById('score-txt').textContent = this.score;
+    document.getElementById('combo-txt').textContent = this.combo;
+  }
+
+  showFloatScore(text, x, y, isWarn = false) {
+    const el = document.createElement('div');
+    el.className = `score-float ${isWarn ? 'score-warning' : ''}`;
+    el.textContent = text;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    document.getElementById('game-container').appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+
+  vibrate(pattern) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(pattern); } catch(e) {}
+    }
+  }
+
+  endGame() {
+    this.isPlaying = false;
+    clearInterval(this.gameTicker);
+    this.sound.stopBGM();
+
+    this.sound.playCheer();
+
+    const container = document.getElementById('game-container');
+    container.classList.remove('panic-flash');
+    document.getElementById('timer-txt').classList.remove('timer-alert');
+
+    const tiers = ['ref-tier-genius', 'ref-tier-michelin', 'ref-tier-master', 'ref-tier-safe', 'ref-tier-foodie'];
+    tiers.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+
+    let rankIcon = '🍳';
+    let rankTitle = '等待被餵食的吃貨';
+    let activeTierId = 'ref-tier-foodie';
+
+    if (this.score >= 3000) {
+      rankIcon = '⚡';
+      rankTitle = '三饗特級天才廚神';
+      activeTierId = 'ref-tier-genius';
+    } else if (this.score >= 2000) {
+      rankIcon = '👑';
+      rankTitle = '米其林派來微服出巡的';
+      activeTierId = 'ref-tier-michelin';
+    } else if (this.score >= 1300) {
+      rankIcon = '🏆';
+      rankTitle = '巷仔內料理總舖師';
+      activeTierId = 'ref-tier-master';
+    } else if (this.score >= 700) {
+      rankIcon = '⭐';
+      rankTitle = '至少今天沒有把廚房炸掉';
+      activeTierId = 'ref-tier-safe';
+    }
+
+    const activeEl = document.getElementById(activeTierId);
+    if (activeEl) activeEl.classList.add('active');
+
+    document.getElementById('end-rank-icon').textContent = rankIcon;
+    document.getElementById('end-rank-title').textContent = rankTitle;
+    document.getElementById('end-score').textContent = this.score;
+    document.getElementById('end-perfect').textContent = this.perfectCount;
+    document.getElementById('end-max-combo').textContent = this.maxCombo;
+
+    document.getElementById('modal-gameover').style.display = 'flex';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new PotGame();
+});
+</script>
+</body>
+</html>
